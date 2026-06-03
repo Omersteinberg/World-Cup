@@ -1,11 +1,13 @@
 import React from 'react';
 
-const PRIZE_PER_PLAYER = 30;
+// Fixed prize structure — does not scale with player count
+const PRIZE_POOL = 160;
+const ENTRY_FEE  = PRIZE_POOL / 8; // $20 per player
 
 const PRIZE_STRUCTURE = [
-  { label: '🥇 1st', pct: 0.7, color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-950/20' },
-  { label: '🥈 2nd', pct: 0.2, color: 'text-slate-300', border: 'border-slate-500/30', bg: 'bg-slate-900/40' },
-  { label: '🥉 3rd', pct: 0.1, color: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-950/20' },
+  { label: '🥇 1st', amount: 100, color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-950/20' },
+  { label: '🥈 2nd', amount: 40,  color: 'text-slate-300', border: 'border-slate-500/30', bg: 'bg-slate-900/40' },
+  { label: '🥉 3rd', amount: 20,  color: 'text-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-950/20' },
 ];
 
 const WINNER_LINES = [
@@ -15,19 +17,18 @@ const WINNER_LINES = [
 ];
 
 const LOSER_LINES = [
-  "will be last to pick their consolation beer.",
+  "will be buying everyone else a consolation drink.",
   "reportedly auditioning for a coaching role to find someone to blame.",
   "might use the downtime to finally learn the offside rule.",
 ];
 
 export default function PotTracker({ players }) {
-  const sorted = [...players].sort((a, b) => b.totalPoints - a.totalPoints);
-  const winner = sorted[0];
+  const sorted    = [...players].sort((a, b) => b.totalPoints - a.totalPoints);
+  const winner    = sorted[0];
   const lastPlace = sorted[sorted.length - 1];
-  const prizePool = players.length * PRIZE_PER_PLAYER;
 
   const winnerLine = WINNER_LINES[winner.name.charCodeAt(0) % WINNER_LINES.length];
-  const loserLine = LOSER_LINES[lastPlace.name.charCodeAt(0) % LOSER_LINES.length];
+  const loserLine  = LOSER_LINES[lastPlace.name.charCodeAt(0) % LOSER_LINES.length];
 
   return (
     <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
@@ -41,18 +42,18 @@ export default function PotTracker({ players }) {
         {/* Total pool */}
         <div className="text-center mb-5">
           <p className="text-xs text-slate-500 uppercase tracking-wider">Total Prize Pool</p>
-          <p className="text-5xl font-black text-emerald-400 mt-1">${prizePool}</p>
+          <p className="text-5xl font-black text-emerald-400 mt-1">${PRIZE_POOL}</p>
           <p className="text-xs text-slate-500 mt-1">
-            {players.length} players × ${PRIZE_PER_PLAYER} entry
+            {players.length} players × ${ENTRY_FEE} entry fee
           </p>
         </div>
 
         {/* Payout splits */}
         <div className="grid grid-cols-3 gap-2 mb-5">
-          {PRIZE_STRUCTURE.map(({ label, pct, color, border, bg }) => (
+          {PRIZE_STRUCTURE.map(({ label, amount, color, border, bg }) => (
             <div key={label} className={`${bg} rounded-lg p-2 border ${border} text-center`}>
               <p className="text-xs text-slate-400 mb-1">{label}</p>
-              <p className={`font-black text-sm ${color}`}>${prizePool * pct}</p>
+              <p className={`font-black text-sm ${color}`}>${amount}</p>
             </div>
           ))}
         </div>

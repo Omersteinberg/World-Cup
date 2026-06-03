@@ -1,4 +1,5 @@
 import React from 'react';
+import { hasApiKey } from '../services/footballApi';
 
 // Country name → flag emoji
 const FLAG = {
@@ -101,7 +102,7 @@ function NoApiKeyState() {
 }
 
 export default function LiveScores({ liveMatches, todayMatches, loading, error, lastUpdated }) {
-  const hasKey = !!import.meta.env.VITE_FOOTBALL_API_KEY;
+  const hasKey = hasApiKey;
 
   // Deduplicate: live first, then rest of today's
   const liveIds  = new Set(liveMatches.map(m => m.id));
