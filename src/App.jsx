@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { initialPlayers }      from './Data/playersdata';
+import { initialPlayers }      from './Data/playersData';
 import BanterTicker             from './components/BanterTicker';
 import Leaderboard              from './components/Leaderboard';
 import LiveScores               from './components/LiveScores';
