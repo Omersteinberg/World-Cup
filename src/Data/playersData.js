@@ -1,0 +1,138 @@
+// src/Data/playersData.js
+// 8 players × 6 teams = 48 FIFA World Cup 2026 teams (no duplicates).
+// Points all start at 0 — calculated live from match results (win=3, draw=1, loss=0).
+// Team status reflects pre-tournament advancement probability:
+//   "alive"    → strong favourites, very likely to advance from groups
+//   "critical" → mid-tier, could advance but it's far from certain
+//   "rip"      → heavy underdogs, almost certain group-stage exits
+
+export const initialPlayers = [
+  {
+    id: "player_1",
+    name: "Omer",
+    banterQuote: "Convinced his 6 teams are a mathematical lock.",
+    totalPoints: 0,
+    previousRank: 1,
+    currentRank: 1,
+    teams: [
+      { name: "France",      nickname: "Mbappé's Ego with Legs",               points: 0, status: "alive"    },
+      { name: "Belgium",     nickname: "The Expired Golden Generation",         points: 0, status: "alive"    },
+      { name: "Morocco",     nickname: "The Atlas Lions with No Off Switch",    points: 0, status: "alive"    },
+      { name: "South Korea", nickname: "Blue Lock Live Action",                 points: 0, status: "critical" },
+      { name: "Canada",      nickname: "Maple Syrup Dark Horse",                points: 0, status: "critical" },
+      { name: "Bolivia",     nickname: "Peak Altitude, Peak Cope",              points: 0, status: "rip"      },
+    ],
+  },
+  {
+    id: "player_2",
+    name: "Jiakai",
+    banterQuote: "Currently drafting a public apology to the prize pot.",
+    totalPoints: 0,
+    previousRank: 2,
+    currentRank: 2,
+    teams: [
+      { name: "Germany",     nickname: "Strictly Business, Zero Joy",           points: 0, status: "alive"    },
+      { name: "Italy",       nickname: "The Pizza-Fuelled Panic Merchants",     points: 0, status: "alive"    },
+      { name: "Ecuador",     nickname: "Andean Altitude Merchants",             points: 0, status: "critical" },
+      { name: "Senegal",     nickname: "Sadio's Ghost Army",                    points: 0, status: "critical" },
+      { name: "Jamaica",     nickname: "Reggae Boyz, Tourist Visa Exit",        points: 0, status: "rip"      },
+      { name: "New Zealand", nickname: "Wrong Sport, Wrong Hemisphere",         points: 0, status: "rip"      },
+    ],
+  },
+  {
+    id: "player_3",
+    name: "James",
+    banterQuote: "Somehow convinced everyone his picks were scientific.",
+    totalPoints: 0,
+    previousRank: 3,
+    currentRank: 3,
+    teams: [
+      { name: "Spain",       nickname: "Tiki-Taka Boredom Factory",             points: 0, status: "alive"    },
+      { name: "USA",         nickname: "The LeBron James of Actual Football",   points: 0, status: "alive"    },
+      { name: "Croatia",     nickname: "Modric's Farewell Tour Pt. 3",          points: 0, status: "critical" },
+      { name: "Cameroon",    nickname: "The Occasionally Indomitable Lions",    points: 0, status: "critical" },
+      { name: "Panama",      nickname: "Canal Zone, Zero Goals",                points: 0, status: "rip"      },
+      { name: "Hungary",     nickname: "Goulash FC, Group Stage Specialty",     points: 0, status: "rip"      },
+    ],
+  },
+  {
+    id: "player_4",
+    name: "Nick",
+    banterQuote: "Would be winning if goals outside the box counted double.",
+    totalPoints: 0,
+    previousRank: 4,
+    currentRank: 4,
+    teams: [
+      { name: "England",     nickname: "Penalty Anxiety FC",                    points: 0, status: "alive"    },
+      { name: "Colombia",    nickname: "Luis Díaz's Helicopter Uncles",         points: 0, status: "alive"    },
+      { name: "Denmark",     nickname: "Quietly Threatening Since 1992",        points: 0, status: "critical" },
+      { name: "Nigeria",     nickname: "Super Eagles, Crash Landings",          points: 0, status: "critical" },
+      { name: "Iraq",        nickname: "Tactical Chaos Reigns",                 points: 0, status: "rip"      },
+      { name: "Honduras",    nickname: "Scenic Route to the Airport",           points: 0, status: "rip"      },
+    ],
+  },
+  {
+    id: "player_5",
+    name: "Max",
+    banterQuote: "Claims he has insider information. Has never played football.",
+    totalPoints: 0,
+    previousRank: 5,
+    currentRank: 5,
+    teams: [
+      { name: "Portugal",    nickname: "Ronaldo's Living Legacy Tax",           points: 0, status: "alive"    },
+      { name: "Japan",       nickname: "Blue Lock Season 3 Confirmed",          points: 0, status: "alive"    },
+      { name: "Turkey",      nickname: "Kebab-Fuelled Quarter-Final Dreamers",  points: 0, status: "critical" },
+      { name: "Ivory Coast", nickname: "The Sleeping Elephants",                points: 0, status: "critical" },
+      { name: "South Africa",nickname: "Bafana Bafana Befuddlement",            points: 0, status: "rip"      },
+      { name: "Venezuela",   nickname: "Oil Rich, Football Poor",               points: 0, status: "rip"      },
+    ],
+  },
+  {
+    id: "player_6",
+    name: "Stefan",
+    banterQuote: "Meticulously researched his teams for 4 hours. Still picked Bolivia.",
+    totalPoints: 0,
+    previousRank: 6,
+    currentRank: 6,
+    teams: [
+      { name: "Netherlands", nickname: "Total Football, Total Collapse",        points: 0, status: "alive"    },
+      { name: "Uruguay",     nickname: "4 Fingers, 1 World Cup Memory",         points: 0, status: "alive"    },
+      { name: "Serbia",      nickname: "Balkan Fury, Group Stage Ceiling",      points: 0, status: "critical" },
+      { name: "Iran",        nickname: "Defensive Concrete Pour",               points: 0, status: "critical" },
+      { name: "Algeria",     nickname: "Desert Mirage FC",                      points: 0, status: "rip"      },
+      { name: "Paraguay",    nickname: "Landlocked and Existential",            points: 0, status: "rip"      },
+    ],
+  },
+  {
+    id: "player_7",
+    name: "Fabian",
+    banterQuote: "Convinced Mexico's curse ends this year. It won't.",
+    totalPoints: 0,
+    previousRank: 7,
+    currentRank: 7,
+    teams: [
+      { name: "Argentina",   nickname: "Messi's Orthopedic Boots",              points: 0, status: "alive"    },
+      { name: "Mexico",      nickname: "El Quinto Partido Curse Eternal",       points: 0, status: "critical" },
+      { name: "Saudi Arabia",nickname: "The Scalp Collector's Edition",         points: 0, status: "critical" },
+      { name: "Australia",   nickname: "Not Rugby, Still Trying",               points: 0, status: "critical" },
+      { name: "Scotland",    nickname: "Braveheart, Brittle Backline",          points: 0, status: "critical" },
+      { name: "Uzbekistan",  nickname: "Silk Road to Elimination",              points: 0, status: "rip"      },
+    ],
+  },
+  {
+    id: "player_8",
+    name: "Michael",
+    banterQuote: "The most confident man with the least justification.",
+    totalPoints: 0,
+    previousRank: 8,
+    currentRank: 8,
+    teams: [
+      { name: "Brazil",      nickname: "The Samba Disappointment Machine",      points: 0, status: "alive"    },
+      { name: "Switzerland", nickname: "Aggressively Efficient Neutrality",     points: 0, status: "critical" },
+      { name: "Egypt",       nickname: "Mo Salah's Solo Mission",               points: 0, status: "critical" },
+      { name: "Austria",     nickname: "Alpine Pretenders FC",                  points: 0, status: "critical" },
+      { name: "Ghana",       nickname: "Black Stars, Cloudy Forecast",          points: 0, status: "critical" },
+      { name: "Costa Rica",  nickname: "CONCACAF's Surprise Package (Expired)", points: 0, status: "rip"      },
+    ],
+  },
+];
