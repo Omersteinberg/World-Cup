@@ -25,7 +25,7 @@ export default function Leaderboard({ players }) {
     <div className="w-full bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
       <div className="bg-slate-950 p-4 border-b border-slate-700 text-center">
         <h2 className="text-xl font-bold text-amber-400 uppercase tracking-wider">
-          🏆 Current Syndicate Standings
+          🏆 Current Standings
         </h2>
       </div>
 

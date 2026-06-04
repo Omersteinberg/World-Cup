@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { initialPlayers }      from './data/playersdata';
+import PasswordGate             from './components/PasswordGate';
 import BanterTicker             from './components/BanterTicker';
 import Leaderboard              from './components/Leaderboard';
 import LiveScores               from './components/LiveScores';
@@ -23,6 +24,7 @@ export default function App() {
   );
 
   return (
+    <PasswordGate>
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
       {/* Global banter ticker — pinned to very top */}
       <BanterTicker />
@@ -73,5 +75,6 @@ export default function App() {
         </footer>
       </div>
     </div>
+    </PasswordGate>
   );
 }
