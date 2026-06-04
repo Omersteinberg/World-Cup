@@ -10,7 +10,7 @@ export const initialPlayers = [
   {
     id: "player_1",
     name: "Jiakai",
-    banterQuote: "Currently drafting a public apology to the prize pot.",
+    banterQuote: "Jiakai is the only person in this whose teams are richer than he is.",
     totalPoints: 0,
     previousRank: 1,
     currentRank: 1,
@@ -26,7 +26,7 @@ export const initialPlayers = [
   {
     id: "player_2",
     name: "James",
-    banterQuote: "Somehow convinced everyone his picks were scientific.",
+    banterQuote: "Jimmy genuinely believes he's the reason Morocco qualified.",
     totalPoints: 0,
     previousRank: 2,
     currentRank: 2,
@@ -42,7 +42,7 @@ export const initialPlayers = [
   {
     id: "player_3",
     name: "Max",
-    banterQuote: "Claims he has insider information. Has never played football.",
+    banterQuote: "Hairline is receding faster than Brazil's World Cup hopes",
     totalPoints: 0,
     previousRank: 3,
     currentRank: 3,
@@ -58,7 +58,7 @@ export const initialPlayers = [
   {
     id: "player_4",
     name: "Michael",
-    banterQuote: "The most confident man with the least justification.",
+    banterQuote: "Michael will find out Netherlands got eliminated three days after it happens.",
     totalPoints: 0,
     previousRank: 4,
     currentRank: 4,
@@ -74,7 +74,7 @@ export const initialPlayers = [
   {
     id: "player_5",
     name: "Nick",
-    banterQuote: "Would be winning if goals outside the box counted double.",
+    banterQuote: "Nick once had a personality. She has it now.",
     totalPoints: 0,
     previousRank: 5,
     currentRank: 5,
@@ -106,7 +106,7 @@ export const initialPlayers = [
   {
     id: "player_7",
     name: "Stefan",
-    banterQuote: "Meticulously researched his teams for 4 hours. Still got Paraguay.",
+    banterQuote: "Stefan's teams are as exciting as Stefan. Make of that what you will.",
     totalPoints: 0,
     previousRank: 7,
     currentRank: 7,
@@ -122,7 +122,7 @@ export const initialPlayers = [
   {
     id: "player_8",
     name: "Fabian",
-    banterQuote: "Convinced Argentina repeat. Messi's knees have other plans.",
+    banterQuote: "Fabian's teams are a joke. Unfortunately he won't get it.",
     totalPoints: 0,
     previousRank: 8,
     currentRank: 8,

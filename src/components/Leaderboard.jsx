@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 
 const STATUS_CFG = {
   alive:    { label: 'Alive',    pill: 'bg-emerald-500/15 text-emerald-400 border-emerald-600/40' },
@@ -15,12 +15,61 @@ function StatusPill({ status }) {
   );
 }
 
+function gdLabel(gd) {
+  return gd > 0 ? `+${gd}` : `${gd}`;
+}
+function gdClass(gd) {
+  return gd > 0 ? 'text-emerald-500' : gd < 0 ? 'text-rose-500' : 'text-slate-600';
+}
+
 export default function Leaderboard({ players }) {
-  const sorted = [...players].sort((a, b) => {
-    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-    return (b.goalDifference ?? 0) - (a.goalDifference ?? 0); // tiebreaker
-  });
   const [expandedId, setExpandedId] = useState(null);
+
+  // --- Live rank-change tracking ---
+  // trendMap: { [playerId]: delta }  positive = moved up, negative = moved down
+  const [trendMap, setTrendMap]   = useState({});
+  const prevIdsRef                = useRef(null); // previous sorted id order
+  const trendTimerRef             = useRef(null);
+
+  const sorted = useMemo(() => [...players].sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    return (b.goalDifference ?? 0) - (a.goalDifference ?? 0);
+  }), [players]);
+
+  useEffect(() => {
+    const currentIds = sorted.map(p => p.id);
+
+    if (prevIdsRef.current === null) {
+      // First render — initialise silently, no arrows yet
+      prevIdsRef.current = currentIds;
+      return;
+    }
+
+    const orderChanged = currentIds.some((id, i) => id !== prevIdsRef.current[i]);
+    if (!orderChanged) return;
+
+    // Build a rank lookup from the previous order
+    const prevRankMap = Object.fromEntries(
+      prevIdsRef.current.map((id, i) => [id, i + 1])
+    );
+
+    // Compute deltas (positive = moved up)
+    const newTrends = {};
+    currentIds.forEach((id, i) => {
+      const prev = prevRankMap[id] ?? i + 1;
+      const delta = prev - (i + 1);
+      if (delta !== 0) newTrends[id] = delta;
+    });
+
+    setTrendMap(newTrends);
+    prevIdsRef.current = currentIds;
+
+    // Clear trend arrows after 30 s so they don't stay stale forever
+    clearTimeout(trendTimerRef.current);
+    trendTimerRef.current = setTimeout(() => setTrendMap({}), 30_000);
+
+    return () => clearTimeout(trendTimerRef.current);
+  }, [sorted]);
 
   const toggle = id => setExpandedId(prev => (prev === id ? null : id));
 
@@ -38,12 +87,14 @@ export default function Leaderboard({ players }) {
           const isLast     = index === sorted.length - 1;
           const isExpanded = expandedId === player.id;
 
-          // Trend arrow based on rank numbers in data
-          const delta = player.previousRank - player.currentRank;
+          // Live trend from tracked rank changes
+          const delta = trendMap[player.id] ?? 0;
           let trendLabel = '●';
           let trendCls   = 'text-slate-600';
-          if (delta > 0) { trendLabel = `▲ ${delta}`;          trendCls = 'text-emerald-400 font-black animate-pulse'; }
+          if (delta > 0) { trendLabel = `▲ ${delta}`;           trendCls = 'text-emerald-400 font-black animate-pulse'; }
           if (delta < 0) { trendLabel = `▼ ${Math.abs(delta)}`; trendCls = 'text-rose-500 font-black'; }
+
+          const gd = player.goalDifference ?? 0;
 
           return (
             <div
@@ -78,7 +129,7 @@ export default function Leaderboard({ players }) {
                       {isFirst && <span>👑</span>}
                       {isLast  && <span>🤡</span>}
                     </h3>
-                    <p className="text-xs text-slate-400 italic truncate">"{player.banterQuote}"</p>
+                    <p className="text-xs text-slate-400 italic leading-snug">"{player.banterQuote}"</p>
                   </div>
                 </div>
 
@@ -87,16 +138,9 @@ export default function Leaderboard({ players }) {
                   <div className="text-right">
                     <span className="text-2xl font-black text-emerald-400">{player.totalPoints}</span>
                     <span className="text-[10px] text-slate-500 block uppercase tracking-tight">pts</span>
-                    {(() => {
-                      const gd = player.goalDifference ?? 0;
-                      const gdStr = gd > 0 ? `+${gd}` : `${gd}`;
-                      const gdCls = gd > 0 ? 'text-emerald-500' : gd < 0 ? 'text-rose-500' : 'text-slate-600';
-                      return (
-                        <span className={`text-[10px] font-bold block ${gdCls}`}>
-                          GD {gdStr}
-                        </span>
-                      );
-                    })()}
+                    <span className={`text-[10px] font-bold block ${gdClass(gd)}`}>
+                      GD {gdLabel(gd)}
+                    </span>
                   </div>
                   <span className="text-slate-600 text-xs">{isExpanded ? '▲' : '▼'}</span>
                 </div>
@@ -106,7 +150,8 @@ export default function Leaderboard({ players }) {
               {isExpanded && (
                 <div className="bg-slate-900/60 px-4 pb-4 pt-1 border-t border-slate-700/50 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {player.teams.map((team, i) => {
-                    const isRip = team.status === 'rip';
+                    const isRip  = team.status === 'rip';
+                    const teamGD = team.goalDifference ?? 0;
                     return (
                       <div
                         key={i}
@@ -133,16 +178,9 @@ export default function Leaderboard({ players }) {
                             ${isRip ? 'bg-slate-900 text-slate-600' : 'bg-emerald-500/10 text-emerald-400'}`}>
                             {team.points} pts
                           </span>
-                          {(() => {
-                            const gd = team.goalDifference ?? 0;
-                            const gdStr = gd > 0 ? `+${gd}` : `${gd}`;
-                            const gdCls = gd > 0 ? 'text-emerald-500' : gd < 0 ? 'text-rose-500' : 'text-slate-600';
-                            return (
-                              <span className={`text-[10px] font-bold block text-right mt-0.5 ${gdCls}`}>
-                                GD {gdStr}
-                              </span>
-                            );
-                          })()}
+                          <span className={`text-[10px] font-bold block text-right mt-0.5 ${gdClass(teamGD)}`}>
+                            GD {gdLabel(teamGD)}
+                          </span>
                         </div>
                       </div>
                     );
