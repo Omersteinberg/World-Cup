@@ -16,7 +16,10 @@ function StatusPill({ status }) {
 }
 
 export default function Leaderboard({ players }) {
-  const sorted = [...players].sort((a, b) => b.totalPoints - a.totalPoints);
+  const sorted = [...players].sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    return (b.goalDifference ?? 0) - (a.goalDifference ?? 0); // tiebreaker
+  });
   const [expandedId, setExpandedId] = useState(null);
 
   const toggle = id => setExpandedId(prev => (prev === id ? null : id));
@@ -79,11 +82,21 @@ export default function Leaderboard({ players }) {
                   </div>
                 </div>
 
-                {/* Points + chevron */}
+                {/* Points + GD + chevron */}
                 <div className="flex items-center gap-3 shrink-0 ml-3">
                   <div className="text-right">
                     <span className="text-2xl font-black text-emerald-400">{player.totalPoints}</span>
                     <span className="text-[10px] text-slate-500 block uppercase tracking-tight">pts</span>
+                    {(() => {
+                      const gd = player.goalDifference ?? 0;
+                      const gdStr = gd > 0 ? `+${gd}` : `${gd}`;
+                      const gdCls = gd > 0 ? 'text-emerald-500' : gd < 0 ? 'text-rose-500' : 'text-slate-600';
+                      return (
+                        <span className={`text-[10px] font-bold block ${gdCls}`}>
+                          GD {gdStr}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <span className="text-slate-600 text-xs">{isExpanded ? '▲' : '▼'}</span>
                 </div>
@@ -115,10 +128,22 @@ export default function Leaderboard({ players }) {
                             "{team.nickname}"
                           </p>
                         </div>
-                        <span className={`text-sm font-black shrink-0 px-2 py-0.5 rounded
-                          ${isRip ? 'bg-slate-900 text-slate-600' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                          {team.points} pts
-                        </span>
+                        <div className="text-right shrink-0">
+                          <span className={`text-sm font-black block px-2 py-0.5 rounded
+                            ${isRip ? 'bg-slate-900 text-slate-600' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                            {team.points} pts
+                          </span>
+                          {(() => {
+                            const gd = team.goalDifference ?? 0;
+                            const gdStr = gd > 0 ? `+${gd}` : `${gd}`;
+                            const gdCls = gd > 0 ? 'text-emerald-500' : gd < 0 ? 'text-rose-500' : 'text-slate-600';
+                            return (
+                              <span className={`text-[10px] font-bold block text-right mt-0.5 ${gdCls}`}>
+                                GD {gdStr}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </div>
                     );
                   })}

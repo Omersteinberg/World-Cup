@@ -39,7 +39,7 @@ export default function App() {
             DAXHUB
           </h1>
           <p className="text-slate-400 mt-3 text-sm sm:text-base tracking-wide max-w-xl mx-auto">
-            The official dashboard keeping the fellas honest, the pot protected, and the friendships fragile.
+            The official dashboard keeping the fellas honest, the friendships fragile, and an absolute gurantee that Jimmy ain't touching the prize money
           </p>
         </header>
 

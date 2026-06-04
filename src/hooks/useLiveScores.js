@@ -8,9 +8,11 @@ const POLL_MS   = 60_000; // 1 minute — safe for football-data.org free tier
 const TODAY_STR = () => new Date().toISOString().split('T')[0];
 
 // Win = 3 pts, draw = 1 pt each, loss = 0.
-// Only FINISHED matches contribute to the leaderboard.
+// Goal difference is tracked as a tiebreaker (GD = goals scored − goals conceded).
+// Only FINISHED matches contribute.
 export function calcPlayerPoints(players, matches) {
-  const earned = {};
+  const earned = {}; // teamName → points
+  const teamGD  = {}; // teamName → goal difference
 
   for (const m of matches) {
     if (m.status !== 'FINISHED') continue;
@@ -20,6 +22,7 @@ export function calcPlayerPoints(players, matches) {
     const as = m.score?.fullTime?.away;
     if (h == null || a == null || hs == null || as == null) continue;
 
+    // Points
     if (hs > as) {
       earned[h] = (earned[h] ?? 0) + 3;
     } else if (hs === as) {
@@ -28,11 +31,24 @@ export function calcPlayerPoints(players, matches) {
     } else {
       earned[a] = (earned[a] ?? 0) + 3;
     }
+
+    // Goal difference per team
+    teamGD[h] = (teamGD[h] ?? 0) + (hs - as);
+    teamGD[a] = (teamGD[a] ?? 0) + (as - hs);
   }
 
   return players.map(p => {
-    const teams = p.teams.map(t => ({ ...t, points: earned[t.name] ?? 0 }));
-    return { ...p, teams, totalPoints: teams.reduce((s, t) => s + t.points, 0) };
+    const teams = p.teams.map(t => ({
+      ...t,
+      points:         earned[t.name] ?? 0,
+      goalDifference: teamGD[t.name]  ?? 0,
+    }));
+    return {
+      ...p,
+      teams,
+      totalPoints:    teams.reduce((s, t) => s + t.points, 0),
+      goalDifference: teams.reduce((s, t) => s + t.goalDifference, 0),
+    };
   });
 }
 

@@ -37,10 +37,10 @@ async function generateBanter(players, matches) {
   const live = matches
     .filter(m => ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(m.status))
     .map(m => {
-      const h = m.homeTeam?.name ?? '?';
-      const a = m.awayTeam?.name ?? '?';
-      const hs = m.score?.fullTime?.home ?? '?';
-      const as = m.score?.fullTime?.away ?? '?';
+      const h  = m.homeTeam?.name ?? '?';
+      const a  = m.awayTeam?.name ?? '?';
+      const hs = m.score?.fullTime?.home ?? m.score?.halfTime?.home ?? '?';
+      const as = m.score?.fullTime?.away ?? m.score?.halfTime?.away ?? '?';
       return `LIVE: ${h} ${hs} - ${as} ${a} (${m.minute ?? '?'}')`;
     }).join('\n');
 
@@ -74,7 +74,7 @@ Return ONLY a JSON array of strings, no other text. Example format:
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }],
     }),
