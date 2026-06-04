@@ -27,7 +27,7 @@ export default function App() {
     <PasswordGate>
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
       {/* Global banter ticker — pinned to very top */}
-      <BanterTicker />
+      <BanterTicker players={players} matches={matches} />
 
       {/* Page wrapper */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
