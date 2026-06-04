@@ -3,7 +3,8 @@
 // The proxy injects the X-Auth-Token header server-side, so the key never hits the browser
 // and CORS is completely avoided.
 
-const BASE = '/football-api';
+// Same path in dev (Vite proxy) and production (Vercel serverless function)
+const BASE = '/api/football';
 
 // Check that a key is configured (used for the "no key" empty-state UI)
 export const hasApiKey = !!(import.meta.env.VITE_FOOTBALL_API_KEY ?? '').trim();
