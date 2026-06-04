@@ -64,7 +64,7 @@ function Message({ msg, currentUser, onReact }) {
             <button
               onClick={() => setPickerOpen(p => !p)}
               className="text-slate-600 hover:text-slate-300 text-base transition-colors
-                opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 pb-0.5"
+              opacity-100 shrink-0 pb-0.5"
               title="React"
             >
               🙂
