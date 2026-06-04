@@ -34,7 +34,7 @@ export default function App() {
         <header className="text-center">
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-transparent bg-clip-text
             bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 drop-shadow-lg leading-tight pb-1">
-            WORLD CUP SYNDICATE
+            DAXHUB
           </h1>
           <p className="text-slate-400 mt-3 text-sm sm:text-base tracking-wide max-w-xl mx-auto">
             The official dashboard keeping the fellas honest, the pot protected, and the friendships fragile.

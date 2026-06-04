@@ -12,8 +12,8 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         manifest: {
-          name: 'World Cup Syndicate Hub',
-          short_name: 'Syndicate',
+          name: 'DaxHub',
+          short_name: 'DaxHub',
           description: 'The official dashboard keeping the fellas honest.',
           theme_color: '#0f172a',
           background_color: '#0f172a',
