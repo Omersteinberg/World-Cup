@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
-const COL            = 'daxhub_messages';
+const COL = 'worldcup_messages';
 const QUICK_REACTIONS = ['👍', '😂', '😭', '🔥', '💀', '🤡', '😤', '🗿'];
 const NAME_COLORS    = [
   'text-emerald-400', 'text-sky-400', 'text-amber-400',
