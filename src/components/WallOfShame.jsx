@@ -32,19 +32,41 @@ export default function WallOfShame({ players }) {
         </h3>
       </div>
 
-      <div className="p-5 text-center">
-        {/* Avatar / shame photo placeholder */}
-        <div className="relative mx-auto w-24 h-24 mb-4">
-          <div className="w-24 h-24 rounded-full bg-slate-700 border-4 border-rose-600 flex items-center justify-center text-5xl shadow-lg shadow-rose-950/50">
-            😬
-          </div>
-          {/* "LIVE SHAME" badge */}
-          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-rose-600 text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full whitespace-nowrap">
-            LIVE SHAME
-          </span>
-        </div>
+      {/* Full shame photo — spans edge to edge */}
+      {(() => {
+        const shamePhotos = {
+          Nick:   '/images/shame/Nick-shame.jpg',
+          Stefan: '/images/shame/Stefan-shame.jpg',
+          Jiakai: '/images/shame/Jiakai-shame.jpg',
+          Omer:   'images/shame/Omer-shame.jpg',
+          Max:    'images/shame/Max-shame.jpg',
+          Michael: 'images/shame/Michael-shame.jpg',
 
-        <h3 className="text-2xl font-black text-rose-400 mt-3">{lastPlace.name}</h3>
+        };
+        const shamePhoto = shamePhotos[lastPlace.name];
+        return shamePhoto ? (
+          <div className="relative">
+            <img
+              src={shamePhoto}
+              alt={lastPlace.name}
+              className="w-full object-contain max-h-108 bg-slate-900/60"
+            />
+            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-rose-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap shadow-lg">
+              LIVE SHAME
+            </span>
+          </div>
+        ) : (
+          <div className="relative flex items-center justify-center bg-slate-900/60 py-10 border-b border-rose-900/30">
+            <span className="text-7xl">😬</span>
+            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-rose-600 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap">
+              LIVE SHAME
+            </span>
+          </div>
+        );
+      })()}
+
+      <div className="p-5 text-center">
+        <h3 className="text-2xl font-black text-rose-400">{lastPlace.name}</h3>
 
         <p className="text-xs font-black uppercase tracking-widest text-rose-300/60 mt-1">
           Tactical Bottler

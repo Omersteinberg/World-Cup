@@ -88,6 +88,7 @@ const FLAG = {
 
 const PLAYER_PROFILES = {
   Omer: {
+    photo: 'images/profiles/Omer.jpg',
     signature: 'The Shekel Collector',
     banterStat: { label: 'Countries banned from', value: '13' },
     banterStat2: { label: 'Girlfriends secured', value: '0' },
@@ -97,6 +98,7 @@ const PLAYER_PROFILES = {
     biggestRisk: 'Getting deported again',
   },
   Jiakai: {
+    photo: '/images/profiles/Jiakai.jpg',
     signature: 'Ding Ding Bong',
     banterStat: { label: 'Villages built', value: '10' },
     banterStat2: { label: 'Bank balance', value: '0' },
@@ -115,6 +117,7 @@ const PLAYER_PROFILES = {
     biggestRisk: 'Travel insurance wont cover a single one of his teams',
   },
   Max: {
+    photo: 'images/profiles/Max.jpg',
     signature: 'The SPF-50 Speedo King',
     banterStat: { label: 'Hair follicles remaining', value: '4' },
     banterStat2: { label: 'Forehead size (km²)', value: '2.4' },
@@ -124,6 +127,7 @@ const PLAYER_PROFILES = {
     biggestRisk: 'Still stalking Laura',
   },
   Michael: {
+    photo: 'images/profiles/Michael.jpg',
     signature: 'Greece\'s Most Loyal Tourist',
     banterStat: { label: 'Pizza shops remaining', value: '0' },
     banterStat2: { label: 'Countries visited', value: '1' },
@@ -133,6 +137,7 @@ const PLAYER_PROFILES = {
     biggestRisk: 'Girlfriend taller than his ambitions',
   },
   Nick: {
+    photo: '/images/profiles/nick.jpg',
     signature: 'The Whipped One',
     banterStat: { label: 'Decisions made alone', value: '0' },
     banterStat2: { label: 'Permission slips needed', value: '∞' },
@@ -142,6 +147,7 @@ const PLAYER_PROFILES = {
     biggestRisk: 'Girlfriend vetoes his picks',
   },
   Stefan: {
+    photo: '/images/profiles/Stefan.jpg',
     signature: 'The Autistic Schedule Keeper',
     banterStat: { label: 'Trams caught this week', value: '14' },
     banterStat2: { label: 'Jokes that landed', value: '0' },
@@ -183,13 +189,24 @@ function ProfileModal({ player, rank, total, onClose }) {
         <div className="px-6 pb-8 pt-2 flex flex-col items-center gap-5">
 
           {/* Avatar */}
-          <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center
-            text-4xl font-black uppercase shadow-lg
-            ${rank === 1 ? 'border-amber-400 bg-amber-600/25' :
-              rank === total ? 'border-rose-500 bg-rose-600/25' :
-              'border-slate-500 bg-slate-700'}`}>
-            {player.name[0]}
-          </div>
+          {profile.photo ? (
+            <img
+              src={profile.photo}
+              alt={player.name}
+              className={`w-20 h-20 rounded-full object-cover border-4 shadow-lg
+                ${rank === 1 ? 'border-amber-400' :
+                  rank === total ? 'border-rose-500' :
+                  'border-slate-500'}`}
+            />
+          ) : (
+            <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center
+              text-4xl font-black uppercase shadow-lg
+              ${rank === 1 ? 'border-amber-400 bg-amber-600/25' :
+                rank === total ? 'border-rose-500 bg-rose-600/25' :
+                'border-slate-500 bg-slate-700'}`}>
+              {player.name[0]}
+            </div>
+          )}
 
           {/* Name + signature */}
           <div className="text-center">
@@ -359,10 +376,18 @@ export default function Leaderboard({ players }) {
                     {/* Avatar — opens profile */}
                     <div
                       onClick={e => { e.stopPropagation(); setProfileEntry({ player, rank: index + 1 }); }}
-                      className={`w-11 h-11 rounded-full shrink-0 border-2 flex items-center justify-center
+                      className={`w-11 h-11 rounded-full shrink-0 border-2 overflow-hidden flex items-center justify-center
                         text-lg font-black uppercase cursor-pointer hover:opacity-80 transition-opacity
                         ${isFirst ? 'border-amber-400 bg-amber-600/25' : isLast ? 'border-rose-500 bg-rose-600/25' : 'border-slate-500 bg-slate-700'}`}>
-                      {player.name[0]}
+                      {PLAYER_PROFILES[player.name]?.photo ? (
+                        <img
+                          src={PLAYER_PROFILES[player.name].photo}
+                          alt={player.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        player.name[0]
+                      )}
                     </div>
 
                     <div className="min-w-0">
