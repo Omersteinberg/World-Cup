@@ -128,7 +128,7 @@ export default function BanterTicker({ players = [], matches = [] }) {
         </div>
       )}
 
-      <div className="flex whitespace-nowrap animate-[marquee_20s_linear_infinite] gap-12">
+      <div className="flex whitespace-nowrap animate-[marquee_10s_linear_infinite] gap-12">
         {/* Render twice for seamless loop */}
         {[...items, ...items].map((item, idx) => (
           <span key={idx} className="flex items-center gap-2">
