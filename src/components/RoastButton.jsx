@@ -16,7 +16,7 @@ const PLAYER_BIOS = {
 
   Nick: `Completely whipped by his girlfriend — she makes every decision. Super hairy like a gorilla. Always tired. Greek but doesn't act like one, just has the same needs. Works a boring job, always on holidays. Looks like he'll have the most boring life of the group. Plays Sunday league with Omer and Max but is the only one who isn't captain.`,
 
-  Stefan: `Extremely boring — his jokes always land flat. Likes to hit people, especially his girlfriend (the boys joke he's a wife-beater). Obsessed with trains, trams and public transport. Autistic. Serbian-Bosnian background.`,
+  Stefan: `Extremely boring — his jokes always land flat and are met with complete silence every time. Obsessed with trains, trams and public transport to a deeply concerning degree. Definetely on the spectrum. Serbian-Bosnian background. Has very "hands on" approach to resolving disagreements with his girlfriend. Somehow the most boring person in any room he walks into. His idea of a wild night is checking the tram timetable.`,
 
   Fabian: `Only Stefan knows him. Zero sense of humour (he's German). Went to Bali with Omer, Max and Stefan. Nobody really knows him — he's just there to make the prize pot bigger.`,
 };
@@ -101,7 +101,7 @@ Rules:
 
       {open && (
         <div
-          className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-4"
+          className="fixed inset-0 bg-black/75 z-50 flex items-center sm:items-center justify-center p-4"
           onClick={close}
         >
           <div
