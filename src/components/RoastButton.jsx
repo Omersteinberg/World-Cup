@@ -6,7 +6,7 @@ const PLAYERS = ['Omer', 'Jiakai', 'James', 'Max', 'Michael', 'Nick', 'Stefan', 
 const PLAYER_BIOS = {
   Omer: `Jewish — Jewish-themed roasts are welcome. Massive ego, always thinks he is right. Can't get a girlfriend. Has a lazy eye that makes him look like the Hunchback of Notre Dame. Good at football but thinks he's better than everyone. Can't enter certain countries. Puns around shekels, kippah and circumcision are welcome.`,
 
-  Jiakai: `4'11" — grass tickles his genitals. Looks like every Asian race so nobody can tell if he's Korean or Chinese. Super broke, relies on Centrelink like the aboriginals. Has worked at McDonald's for 10 years. Is 25 but has the body of a 60-year-old with constant back problems. Can't talk to women and gets immediately friend-zoned. Has a crazy tennis serve though.`,
+  Jiakai: `4'11" — so short the grass tickles places it shouldn't. Ambiguous ethnicity — nobody can tell if he's Korean, Chinese or something else entirely, including him. Financially challenged to an extreme degree, has been loyally serving McDonald's for 10 years at age 25. Has the body and spine of a 60-year-old, constant back problems and injuries from doing absolutely nothing. Completely invisible to women — gets friend-zoned before he even finishes his opening line. Somehow has a lethal tennis serve despite everything else about him being physically broken. Always injured, always broke, always friend-zoned.`,
 
   James: `Travelled Europe with his ex including Morocco, Spain, Italy and France. Looks like a classic Australian. Started playing tennis with the boys and is absolutely awful. Supports Western Bulldogs in AFL. His World Cup teams are the least likely to win him any money.`,
 
