@@ -63,7 +63,7 @@ export const initialPlayers = [
     previousRank: 4,
     currentRank: 4,
     teams: [
-      { name: "Netherlands", nickname: "Makes sense Stefan has them. He's Also Pale, Flat and Hard to Read",  points: 0, status: "alive"    },
+      { name: "Netherlands", nickname: "Just like Stefan they're also Pale, Flat and Hard to Read",  points: 0, status: "alive"    },
       { name: "Colombia",    nickname: "Luis Díaz's Entire Extended Family",            points: 0, status: "alive"    },
       { name: "Turkey",      nickname: "The Only Nation Where Max's Forehead Would Be Classified as a Natural Disaster",       points: 0, status: "critical" },
       { name: "Norway",      nickname: "Haaland Carrying a Nation on One Hamstring",    points: 0, status: "critical" },

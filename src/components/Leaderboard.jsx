@@ -6,6 +6,119 @@ const STATUS_CFG = {
   rip:      { label: 'RIP',      pill: 'bg-rose-500/15    text-rose-400    border-rose-600/40'    },
 };
 
+// ── Player profile modal (slide-up) ──────────────────────────────────────────
+function ProfileModal({ player, rank, total, onClose }) {
+  const alive    = player.teams.filter(t => t.status === 'alive').length;
+  const critical = player.teams.filter(t => t.status === 'critical').length;
+  const rip      = player.teams.filter(t => t.status === 'rip').length;
+  const gd       = player.goalDifference ?? 0;
+
+  // Close on backdrop click
+  return (
+    <div
+      className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-800 border border-slate-700 rounded-t-3xl sm:rounded-2xl w-full
+          max-w-md shadow-2xl animate-[slideUp_0.3s_ease-out] pb-safe"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-slate-600" />
+        </div>
+
+        {/* Close (desktop) */}
+        <div className="hidden sm:flex justify-end px-5 pt-4">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl">✕</button>
+        </div>
+
+        <div className="px-6 pb-8 pt-4 sm:pt-2 flex flex-col items-center gap-5">
+          {/* Avatar */}
+          <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center
+            text-4xl font-black uppercase shadow-lg
+            ${rank === 1 ? 'border-amber-400 bg-amber-600/25' :
+              rank === total ? 'border-rose-500 bg-rose-600/25' :
+              'border-slate-500 bg-slate-700'}`}>
+            {player.name[0]}
+          </div>
+
+          {/* Name + rank */}
+          <div className="text-center">
+            <h2 className="text-2xl font-black text-white">
+              {player.name}
+              {rank === 1 && ' 👑'}
+              {rank === total && ' 🤡'}
+            </h2>
+            <p className="text-slate-400 text-sm italic mt-1">"{player.banterQuote}"</p>
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-3 w-full">
+            {[
+              { label: 'Rank',   value: `#${rank}` },
+              { label: 'Points', value: player.totalPoints, cls: 'text-emerald-400' },
+              { label: 'GD',     value: gd > 0 ? `+${gd}` : gd,
+                cls: gd > 0 ? 'text-emerald-400' : gd < 0 ? 'text-rose-400' : 'text-slate-400' },
+            ].map(({ label, value, cls }) => (
+              <div key={label} className="bg-slate-900/60 rounded-xl p-3 text-center border border-slate-700">
+                <p className={`text-xl font-black ${cls ?? 'text-white'}`}>{value}</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Team health */}
+          <div className="flex gap-3 w-full">
+            {[
+              { label: 'Alive',    count: alive,    cls: 'text-emerald-400 border-emerald-700/50 bg-emerald-950/30' },
+              { label: 'Critical', count: critical, cls: 'text-amber-400   border-amber-700/50   bg-amber-950/30'   },
+              { label: 'RIP',      count: rip,      cls: 'text-rose-400    border-rose-700/50    bg-rose-950/30'    },
+            ].map(({ label, count, cls }) => (
+              <div key={label} className={`flex-1 rounded-xl border p-2.5 text-center ${cls}`}>
+                <p className="text-lg font-black">{count}</p>
+                <p className="text-[10px] uppercase tracking-wider opacity-70">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Teams grid */}
+          <div className="grid grid-cols-2 gap-2 w-full">
+            {player.teams.map((team, i) => {
+              const cfg = STATUS_CFG[team.status] ?? STATUS_CFG.alive;
+              return (
+                <div key={i} className={`rounded-xl border p-3 bg-slate-900/50
+                  ${team.status === 'rip' ? 'opacity-50 border-slate-700/40' : 'border-slate-700'}`}>
+                  <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                    <span className={`font-bold text-xs ${team.status === 'rip' ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                      {team.name}
+                    </span>
+                    {team.status === 'rip' && <span>🪦</span>}
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-1 py-0.5 rounded border ${cfg.pill}`}>
+                      {cfg.label}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-amber-500/70 italic leading-tight">"{team.nickname}"</p>
+                  <p className="text-emerald-400 font-black text-sm mt-1">{team.points} pts</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={onClose}
+            className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-3
+              rounded-xl text-sm transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StatusPill({ status }) {
   const cfg = STATUS_CFG[status] ?? STATUS_CFG.alive;
   return (
@@ -23,7 +136,8 @@ function gdClass(gd) {
 }
 
 export default function Leaderboard({ players }) {
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedId,   setExpandedId]   = useState(null);
+  const [profileEntry, setProfileEntry] = useState(null); // { player, rank }
 
   // --- Live rank-change tracking ---
   // trendMap: { [playerId]: delta }  positive = moved up, negative = moved down
@@ -74,6 +188,15 @@ export default function Leaderboard({ players }) {
   const toggle = id => setExpandedId(prev => (prev === id ? null : id));
 
   return (
+    <>
+    {profileEntry && (
+      <ProfileModal
+        player={profileEntry.player}
+        rank={profileEntry.rank}
+        total={sorted.length}
+        onClose={() => setProfileEntry(null)}
+      />
+    )}
     <div className="w-full bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
       <div className="bg-slate-950 p-4 border-b border-slate-700 text-center">
         <h2 className="text-xl font-bold text-amber-400 uppercase tracking-wider">
@@ -116,9 +239,12 @@ export default function Leaderboard({ players }) {
                     </span>
                   </div>
 
-                  {/* Avatar circle */}
-                  <div className={`w-11 h-11 rounded-full shrink-0 border-2 flex items-center justify-center text-lg font-black uppercase
-                    ${isFirst ? 'border-amber-400 bg-amber-600/25' : isLast ? 'border-rose-500 bg-rose-600/25' : 'border-slate-500 bg-slate-700'}`}>
+                  {/* Avatar circle — click opens profile modal */}
+                  <div
+                    onClick={e => { e.stopPropagation(); setProfileEntry({ player, rank: index + 1 }); }}
+                    className={`w-11 h-11 rounded-full shrink-0 border-2 flex items-center justify-center
+                      text-lg font-black uppercase cursor-pointer hover:opacity-80 transition-opacity
+                      ${isFirst ? 'border-amber-400 bg-amber-600/25' : isLast ? 'border-rose-500 bg-rose-600/25' : 'border-slate-500 bg-slate-700'}`}>
                     {player.name[0]}
                   </div>
 
@@ -192,5 +318,6 @@ export default function Leaderboard({ players }) {
         })}
       </div>
     </div>
+    </>
   );
 }
