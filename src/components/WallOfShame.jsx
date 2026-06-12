@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-const SHAME_START = new Date('2026-06-01T09:00:00');
+const STORAGE_KEY_PLAYER = 'shame_player';
+const STORAGE_KEY_SINCE  = 'shame_since';
 
 function formatElapsed(ms) {
   const totalSecs = Math.max(0, Math.floor(ms / 1000));
@@ -18,14 +19,31 @@ export default function WallOfShame({ players }) {
   });
   const lastPlace = sorted[sorted.length - 1];
 
-  const [elapsed, setElapsed] = useState(() => formatElapsed(Date.now() - SHAME_START));
+  const [shameSince, setShameSince] = useState(() => {
+    const storedSince = localStorage.getItem(STORAGE_KEY_SINCE);
+    return storedSince ? Number(storedSince) : Date.now();
+  });
+
+  const [elapsed, setElapsed] = useState(() => formatElapsed(Date.now() - shameSince));
+
+  // Reset the timer whenever a different player drops to last place
+  useEffect(() => {
+    const storedPlayer = localStorage.getItem(STORAGE_KEY_PLAYER);
+    if (storedPlayer !== lastPlace.name) {
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY_PLAYER, lastPlace.name);
+      localStorage.setItem(STORAGE_KEY_SINCE, String(now));
+      setShameSince(now);
+    }
+  }, [lastPlace.name]);
 
   useEffect(() => {
+    setElapsed(formatElapsed(Date.now() - shameSince));
     const id = setInterval(() => {
-      setElapsed(formatElapsed(Date.now() - SHAME_START));
+      setElapsed(formatElapsed(Date.now() - shameSince));
     }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [shameSince]);
 
   return (
     <div className="bg-slate-800 rounded-2xl border border-rose-900/60 overflow-hidden shadow-xl">
