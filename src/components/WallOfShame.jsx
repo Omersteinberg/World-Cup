@@ -12,7 +12,10 @@ function formatElapsed(ms) {
 }
 
 export default function WallOfShame({ players }) {
-  const sorted   = [...players].sort((a, b) => b.totalPoints - a.totalPoints);
+  const sorted = [...players].sort((a, b) => {
+  if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+  return (b.goalDifference ?? 0) - (a.goalDifference ?? 0);
+  });
   const lastPlace = sorted[sorted.length - 1];
 
   const [elapsed, setElapsed] = useState(() => formatElapsed(Date.now() - SHAME_START));

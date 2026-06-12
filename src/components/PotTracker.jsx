@@ -23,7 +23,10 @@ const LOSER_LINES = [
 ];
 
 export default function PotTracker({ players }) {
-  const sorted    = [...players].sort((a, b) => b.totalPoints - a.totalPoints);
+    const sorted = [...players].sort((a, b) => {
+  if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+  return (b.goalDifference ?? 0) - (a.goalDifference ?? 0);
+  });
   const winner    = sorted[0];
   const lastPlace = sorted[sorted.length - 1];
 
