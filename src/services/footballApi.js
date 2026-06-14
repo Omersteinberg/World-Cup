@@ -15,11 +15,14 @@ const API_NAME_MAP = {
   'United States of America':  'USA',
   'Korea Republic':            'South Korea',
   'Republic of Korea':         'South Korea',
-  'IR Iran':                   'Iran',
+  'Iran':                      'IR Iran',
   "Côte d'Ivoire":             'Ivory Coast',
   "Cote d'Ivoire":             'Ivory Coast',
   'Türkiye':                   'Turkey',
-  'Czech Republic':            'Czechia',
+  'Czechia':                   'Czech Republic',
+  'Bosnia-Herzegovina':        'Bosnia & Herzegovina',
+  'Cape Verde Islands':        'Cape Verde',
+  'Congo DR':                  'DR Congo',
 };
 
 export function normalizeTeamName(name = '') {
