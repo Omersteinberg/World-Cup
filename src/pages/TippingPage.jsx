@@ -62,11 +62,19 @@ function groupLabel(g) {
   return g?.replace('GROUP_', 'Group ') ?? '';
 }
 
+// ── Manual adjustments ───────────────────────────────────────────────────────
+// One-off corrections for tips that never made it into Firestore (e.g. called
+// verbally/missed the app) — added on top of the auto-calculated totals.
+const MANUAL_ADJUSTMENTS = {
+  Max:  6, // got everyone's tips right but forgot to submit them in the app
+  Omer: 1, // got the exact score right but forgot to select home/draw/away
+};
+
 // ── Points calculation ─────────────────────────────────────────────────────────
 function calcPoints(finishedMatches, tipMap, predMap) {
   const total = {};
   const todayPts = {};
-  PLAYERS.forEach(p => { total[p] = 0; todayPts[p] = 0; });
+  PLAYERS.forEach(p => { total[p] = MANUAL_ADJUSTMENTS[p] ?? 0; todayPts[p] = 0; });
   const today = todayAEST();
 
   for (const m of finishedMatches) {
