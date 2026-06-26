@@ -67,7 +67,7 @@ function groupLabel(g) {
 // verbally/missed the app) — added on top of the auto-calculated totals.
 const MANUAL_ADJUSTMENTS = {
   Max:  6, // got everyone's tips right but forgot to submit them in the app
-  Omer: 1, // got the exact score right but forgot to select home/draw/away
+  Omer: ``, // got the exact score right but forgot to select home/draw/away
 };
 
 // ── Points calculation ─────────────────────────────────────────────────────────
