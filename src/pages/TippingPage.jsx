@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   collection, onSnapshot, setDoc, doc, serverTimestamp,
 } from 'firebase/firestore';
@@ -373,6 +373,8 @@ export default function TippingPage({ matches = [] }) {
   const [tipMap,  setTipMap]  = useState({}); // { matchId: { playerName: 'home'|'draw'|'away' } }
   const [predMap, setPredMap] = useState({}); // { matchId: { playerName: { homeScore, awayScore } } }
   const [tab, setTab] = useState('matches');
+  const todayRef = useRef(null);
+  const hasScrolledRef = useRef(false);
 
   // Persist name
   useEffect(() => {
@@ -426,6 +428,14 @@ export default function TippingPage({ matches = [] }) {
   }, [matches]);
 
   const sortedDates = useMemo(() => Object.keys(grouped).sort(), [grouped]);
+
+  // Auto-scroll to today's matches once, the first time they're available
+  useEffect(() => {
+    if (hasScrolledRef.current || tab !== 'matches') return;
+    if (!sortedDates.includes(todayAEST()) || !todayRef.current) return;
+    todayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    hasScrolledRef.current = true;
+  }, [tab, sortedDates]);
   const finishedMatches = useMemo(() => matches.filter(m => m.status === 'FINISHED'), [matches]);
 
   async function handleTip(match, tip) {
@@ -507,7 +517,11 @@ export default function TippingPage({ matches = [] }) {
                 </p>
               )}
               {sortedDates.map(date => (
-                <div key={date} className="flex flex-col gap-3">
+                <div
+                  key={date}
+                  ref={date === todayAEST() ? todayRef : null}
+                  className="flex flex-col gap-3"
+                >
                   <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 px-1">
                     {formatDateHeader(date)}
                     {date === todayAEST() && (

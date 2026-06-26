@@ -12,7 +12,7 @@ function formatElapsed(ms) {
   return `${days}d ${String(hours).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
 }
 
-export default function WallOfShame({ players }) {
+export default function WallOfShame({ players, loading }) {
   const sorted = [...players].sort((a, b) => {
   if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
   return (b.goalDifference ?? 0) - (a.goalDifference ?? 0);
@@ -26,8 +26,12 @@ export default function WallOfShame({ players }) {
 
   const [elapsed, setElapsed] = useState(() => formatElapsed(Date.now() - shameSince));
 
-  // Reset the timer whenever a different player drops to last place
+  // Reset the timer whenever a different player drops to last place.
+  // Skipped while match data is still loading — until then `players` is all
+  // zeroes and "last place" is just whoever sits last in the array, which
+  // would otherwise overwrite the real shame_player on every app open.
   useEffect(() => {
+    if (loading) return;
     const storedPlayer = localStorage.getItem(STORAGE_KEY_PLAYER);
     if (storedPlayer !== lastPlace.name) {
       const now = Date.now();
@@ -35,7 +39,7 @@ export default function WallOfShame({ players }) {
       localStorage.setItem(STORAGE_KEY_SINCE, String(now));
       setShameSince(now);
     }
-  }, [lastPlace.name]);
+  }, [lastPlace.name, loading]);
 
   useEffect(() => {
     setElapsed(formatElapsed(Date.now() - shameSince));

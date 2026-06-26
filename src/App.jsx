@@ -53,7 +53,7 @@ export default function App() {
                 <PotTracker  players={players} />
                 <RoastButton players={players} />
                 <CivilWarRadar />
-                <WallOfShame players={players} />
+                <WallOfShame players={players} loading={loading} />
                 <WatchAlongChat />
               </aside>
             </main>
