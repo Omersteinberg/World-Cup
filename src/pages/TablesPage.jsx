@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useSwipeTabs } from '../hooks/useSwipeTabs';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -158,33 +159,7 @@ function KnockoutMatch({ match }) {
 
 export default function TablesPage({ matches = [] }) {
   const [tab, setTab] = useState('groups');
-  const swipeStartRef = useRef(null);
-
-  const SWIPE_MIN = 60;
-
-  function handleSwipeStart(e) {
-    const t = e.touches[0];
-    swipeStartRef.current = { x: t.clientX, y: t.clientY };
-  }
-
-  function handleSwipeEnd(e) {
-    const start = swipeStartRef.current;
-    swipeStartRef.current = null;
-    if (!start) return;
-
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-
-    if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) < Math.abs(dy)) return;
-
-    if (dx < 0 && tab === 'groups') setTab('knockout');
-    else if (dx > 0 && tab === 'knockout') setTab('groups');
-  }
-
-  function handleSwipeCancel() {
-    swipeStartRef.current = null;
-  }
+  const swipeRef = useSwipeTabs(tab, setTab, 'groups', 'knockout');
 
   const standings = useMemo(() => buildGroupStandings(matches), [matches]);
   const knockout  = useMemo(() => buildKnockoutRounds(matches),  [matches]);
@@ -226,12 +201,7 @@ export default function TablesPage({ matches = [] }) {
       </div>
 
       {/* Tab content — swipe left/right to switch tabs */}
-      <div
-        className="touch-pan-y"
-        onTouchStart={handleSwipeStart}
-        onTouchEnd={handleSwipeEnd}
-        onTouchCancel={handleSwipeCancel}
-      >
+      <div ref={swipeRef} className="touch-pan-y overscroll-x-none">
         {tab === 'groups' && (
           <>
             {!hasGroups ? (

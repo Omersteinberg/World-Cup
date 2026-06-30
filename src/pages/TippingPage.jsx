@@ -3,6 +3,7 @@ import {
   collection, onSnapshot, setDoc, doc, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { useSwipeTabs } from '../hooks/useSwipeTabs';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAYERS   = ['Omer', 'Jiakai', 'James', 'Max', 'Michael', 'Nick', 'Stefan', 'Fabian'];
@@ -53,17 +54,8 @@ function wentToPenalties(match) {
     || match.status === 'PENALTY_SHOOTOUT';
 }
 
-function getPenaltyScore(match) {
-  const pens = match.score?.penalties;
-  if (!pens || !wentToPenalties(match)) return null;
-  const home = scoreSide(pens, 'home');
-  const away = scoreSide(pens, 'away');
-  if (home == null || away == null) return null;
-  return { home, away };
-}
-
-/** Score used for tipping — goals in 90 min + extra time, excluding penalties. */
-function getTippingScore(match) {
+/** Score after 90 min + extra time — used for tipping, excludes shootout goals. */
+function getEndOfPlayScore(match) {
   const score = match.score;
   if (!score) return { home: null, away: null };
 
@@ -76,11 +68,13 @@ function getTippingScore(match) {
         away: (scoreSide(rt, 'away') ?? 0) + (scoreSide(et, 'away') ?? 0),
       };
     }
-    const pens = getPenaltyScore(match);
+    const pens = score.penalties;
     const ftH = scoreSide(score.fullTime, 'home');
     const ftA = scoreSide(score.fullTime, 'away');
-    if (pens && ftH != null && ftA != null) {
-      return { home: ftH - pens.home, away: ftA - pens.away };
+    const ph = scoreSide(pens, 'home');
+    const pa = scoreSide(pens, 'away');
+    if (ftH != null && ftA != null && ph != null && pa != null) {
+      return { home: ftH - ph, away: ftA - pa };
     }
   }
 
@@ -88,6 +82,23 @@ function getTippingScore(match) {
     home: scoreSide(score.fullTime, 'home'),
     away: scoreSide(score.fullTime, 'away'),
   };
+}
+
+/** Shootout goals only — derived from fullTime minus end-of-play (API penalties node can be wrong). */
+function getPenaltyScore(match) {
+  if (!wentToPenalties(match)) return null;
+  const play = getEndOfPlayScore(match);
+  const ftH = scoreSide(match.score?.fullTime, 'home');
+  const ftA = scoreSide(match.score?.fullTime, 'away');
+  if (play.home == null || play.away == null || ftH == null || ftA == null) return null;
+  const home = ftH - play.home;
+  const away = ftA - play.away;
+  if (home < 0 || away < 0) return null;
+  return { home, away };
+}
+
+function getTippingScore(match) {
+  return getEndOfPlayScore(match);
 }
 
 function getActualResult(match) {
@@ -431,33 +442,7 @@ export default function TippingPage({ matches = [] }) {
   const [tab, setTab] = useState('matches');
   const todayRef = useRef(null);
   const prevTabRef = useRef(null);
-  const swipeStartRef = useRef(null);
-
-  const SWIPE_MIN = 60;
-
-  function handleSwipeStart(e) {
-    const t = e.touches[0];
-    swipeStartRef.current = { x: t.clientX, y: t.clientY };
-  }
-
-  function handleSwipeEnd(e) {
-    const start = swipeStartRef.current;
-    swipeStartRef.current = null;
-    if (!start) return;
-
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-
-    if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) < Math.abs(dy)) return;
-
-    if (dx < 0 && tab === 'matches') setTab('leaderboard');
-    else if (dx > 0 && tab === 'leaderboard') setTab('matches');
-  }
-
-  function handleSwipeCancel() {
-    swipeStartRef.current = null;
-  }
+  const swipeRef = useSwipeTabs(tab, setTab, 'matches', 'leaderboard');
 
   // Persist name
   useEffect(() => {
@@ -594,12 +579,7 @@ export default function TippingPage({ matches = [] }) {
           </div>
 
           {/* Tab content — swipe left/right to switch tabs */}
-          <div
-            className="touch-pan-y"
-            onTouchStart={handleSwipeStart}
-            onTouchEnd={handleSwipeEnd}
-            onTouchCancel={handleSwipeCancel}
-          >
+          <div ref={swipeRef} className="touch-pan-y overscroll-x-none">
             {tab === 'matches' && (
               <div className="flex flex-col gap-6">
                 {sortedDates.length === 0 && (
