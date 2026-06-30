@@ -41,16 +41,64 @@ function formatDateHeader(dateStr) {
 }
 
 // ── Game logic ─────────────────────────────────────────────────────────────────
+// football-data.org v4: fullTime includes penalty goals when duration is
+// PENALTY_SHOOTOUT. Tipping uses the score after 90 min + extra time only.
+function scoreSide(obj, side) {
+  if (!obj) return null;
+  return side === 'home' ? (obj.home ?? obj.homeTeam ?? null) : (obj.away ?? obj.awayTeam ?? null);
+}
+
+function wentToPenalties(match) {
+  return match.score?.duration === 'PENALTY_SHOOTOUT'
+    || match.status === 'PENALTY_SHOOTOUT';
+}
+
+function getPenaltyScore(match) {
+  const pens = match.score?.penalties;
+  if (!pens || !wentToPenalties(match)) return null;
+  const home = scoreSide(pens, 'home');
+  const away = scoreSide(pens, 'away');
+  if (home == null || away == null) return null;
+  return { home, away };
+}
+
+/** Score used for tipping — goals in 90 min + extra time, excluding penalties. */
+function getTippingScore(match) {
+  const score = match.score;
+  if (!score) return { home: null, away: null };
+
+  if (wentToPenalties(match)) {
+    const rt = score.regularTime;
+    const et = score.extraTime;
+    if (rt != null || et != null) {
+      return {
+        home: (scoreSide(rt, 'home') ?? 0) + (scoreSide(et, 'home') ?? 0),
+        away: (scoreSide(rt, 'away') ?? 0) + (scoreSide(et, 'away') ?? 0),
+      };
+    }
+    const pens = getPenaltyScore(match);
+    const ftH = scoreSide(score.fullTime, 'home');
+    const ftA = scoreSide(score.fullTime, 'away');
+    if (pens && ftH != null && ftA != null) {
+      return { home: ftH - pens.home, away: ftA - pens.away };
+    }
+  }
+
+  return {
+    home: scoreSide(score.fullTime, 'home'),
+    away: scoreSide(score.fullTime, 'away'),
+  };
+}
+
 function getActualResult(match) {
   if (match.status !== 'FINISHED') return null;
-  const hs = match.score?.fullTime?.home;
-  const as = match.score?.fullTime?.away;
+  const { home: hs, away: as } = getTippingScore(match);
   if (hs == null || as == null) return null;
   return hs > as ? 'home' : hs < as ? 'away' : 'draw';
 }
 
 function isLocked(match) {
-  if (['IN_PLAY', 'PAUSED', 'HALFTIME', 'FINISHED'].includes(match.status)) return true;
+  if (['IN_PLAY', 'PAUSED', 'HALFTIME', 'EXTRA_TIME', 'PENALTY_SHOOTOUT', 'FINISHED'].includes(match.status)) return true;
   return new Date(match.utcDate).getTime() <= Date.now();
 }
 
@@ -80,8 +128,7 @@ function calcPoints(finishedMatches, tipMap, predMap) {
   for (const m of finishedMatches) {
     const result = getActualResult(m);
     if (!result) continue;
-    const hs = m.score?.fullTime?.home;
-    const as = m.score?.fullTime?.away;
+    const { home: hs, away: as } = getTippingScore(m);
     const isToday = matchDateAEST(m.utcDate) === today;
 
     for (const player of PLAYERS) {
@@ -127,10 +174,10 @@ function TipBtn({ value, label, selected, onClick, disabled }) {
 function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
   const locked   = isLocked(match);
   const result   = getActualResult(match);
-  const isLive   = ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(match.status);
+  const isLive   = ['IN_PLAY', 'PAUSED', 'HALFTIME', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'].includes(match.status);
   const isDone   = match.status === 'FINISHED';
-  const hs       = match.score?.fullTime?.home;
-  const as       = match.score?.fullTime?.away;
+  const { home: hs, away: as } = getTippingScore(match);
+  const pens     = isDone ? getPenaltyScore(match) : null;
 
   const myTip  = playerName ? tipMap[match.id]?.[playerName]  : null;
   const myPred = playerName ? predMap[match.id]?.[playerName] : null;
@@ -164,11 +211,18 @@ function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
           <span className="font-bold text-sm text-slate-200 flex-1">{match.homeTeam?.name ?? 'TBD'}</span>
           <div className="shrink-0 text-center min-w-[60px]">
             {isDone ? (
-              <span className="text-white font-black text-lg">{hs} – {as}</span>
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-white font-black text-lg">{hs} – {as}</span>
+                {pens && (
+                  <span className="text-[10px] font-bold text-slate-400">
+                    pens {pens.home}–{pens.away}
+                  </span>
+                )}
+              </div>
             ) : isLive ? (
               <span className="text-emerald-400 font-black text-sm flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
-                LIVE
+                {match.status === 'PENALTY_SHOOTOUT' ? 'PENS' : 'LIVE'}
               </span>
             ) : (
               <span className="text-slate-600 text-xs">vs</span>
@@ -178,7 +232,9 @@ function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
         </div>
 
         {isDone && (
-          <p className="text-center text-[10px] text-slate-600 uppercase tracking-wider mt-1">Full Time</p>
+          <p className="text-center text-[10px] text-slate-600 uppercase tracking-wider mt-1">
+            {pens ? 'After Extra Time' : 'Full Time'}
+          </p>
         )}
         {locked && !isDone && !isLive && (
           <p className="text-center text-[10px] text-rose-500/70 uppercase tracking-wider mt-1">🔒 Locked</p>
@@ -317,7 +373,7 @@ function TippingLeaderboard({ finishedMatches, tipMap, predMap }) {
     <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
       <div className="bg-slate-950 p-4 text-center border-b border-slate-700">
         <h2 className="text-lg font-black text-amber-400 uppercase tracking-wider">🏅 Tipping Leaderboard</h2>
-        <p className="text-xs text-slate-500 mt-1">Points from correct tips (1pt) and exact scores (2pts)</p>
+        <p className="text-xs text-slate-500 mt-1">1pt correct result · 2pts exact score (90 min + ET)</p>
       </div>
 
       <table className="w-full text-sm">
@@ -375,6 +431,33 @@ export default function TippingPage({ matches = [] }) {
   const [tab, setTab] = useState('matches');
   const todayRef = useRef(null);
   const hasScrolledRef = useRef(false);
+  const swipeStartRef = useRef(null);
+
+  const SWIPE_MIN = 60;
+
+  function handleSwipeStart(e) {
+    const t = e.touches[0];
+    swipeStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function handleSwipeEnd(e) {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+
+    if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < 0 && tab === 'matches') setTab('leaderboard');
+    else if (dx > 0 && tab === 'leaderboard') setTab('matches');
+  }
+
+  function handleSwipeCancel() {
+    swipeStartRef.current = null;
+  }
 
   // Persist name
   useEffect(() => {
@@ -508,53 +591,59 @@ export default function TippingPage({ matches = [] }) {
             ))}
           </div>
 
-          {/* Matches tab */}
-          {tab === 'matches' && (
-            <div className="flex flex-col gap-6">
-              {sortedDates.length === 0 && (
-                <p className="text-center text-slate-500 italic py-8">
-                  No matches loaded yet. Check back once the tournament kicks off.
-                </p>
-              )}
-              {sortedDates.map(date => (
-                <div
-                  key={date}
-                  ref={date === todayAEST() ? todayRef : null}
-                  className="flex flex-col gap-3"
-                >
-                  <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 px-1">
-                    {formatDateHeader(date)}
-                    {date === todayAEST() && (
-                      <span className="ml-2 text-emerald-400 text-[10px] bg-emerald-900/40
-                        border border-emerald-700/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
-                        Today
-                      </span>
-                    )}
-                  </h2>
-                  {grouped[date].map(match => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      tipMap={tipMap}
-                      predMap={predMap}
-                      playerName={playerName}
-                      onTip={handleTip}
-                      onPred={handlePred}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Tab content — swipe left/right to switch tabs */}
+          <div
+            className="touch-pan-y"
+            onTouchStart={handleSwipeStart}
+            onTouchEnd={handleSwipeEnd}
+            onTouchCancel={handleSwipeCancel}
+          >
+            {tab === 'matches' && (
+              <div className="flex flex-col gap-6">
+                {sortedDates.length === 0 && (
+                  <p className="text-center text-slate-500 italic py-8">
+                    No matches loaded yet. Check back once the tournament kicks off.
+                  </p>
+                )}
+                {sortedDates.map(date => (
+                  <div
+                    key={date}
+                    ref={date === todayAEST() ? todayRef : null}
+                    className="flex flex-col gap-3"
+                  >
+                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 px-1">
+                      {formatDateHeader(date)}
+                      {date === todayAEST() && (
+                        <span className="ml-2 text-emerald-400 text-[10px] bg-emerald-900/40
+                          border border-emerald-700/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
+                          Today
+                        </span>
+                      )}
+                    </h2>
+                    {grouped[date].map(match => (
+                      <MatchCard
+                        key={match.id}
+                        match={match}
+                        tipMap={tipMap}
+                        predMap={predMap}
+                        playerName={playerName}
+                        onTip={handleTip}
+                        onPred={handlePred}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
 
-          {/* Leaderboard tab */}
-          {tab === 'leaderboard' && (
-            <TippingLeaderboard
-              finishedMatches={finishedMatches}
-              tipMap={tipMap}
-              predMap={predMap}
-            />
-          )}
+            {tab === 'leaderboard' && (
+              <TippingLeaderboard
+                finishedMatches={finishedMatches}
+                tipMap={tipMap}
+                predMap={predMap}
+              />
+            )}
+          </div>
         </>
       )}
     </div>
