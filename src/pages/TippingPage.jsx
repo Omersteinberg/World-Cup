@@ -4,6 +4,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useSwipeTabs } from '../hooks/useSwipeTabs';
+import {
+  getEndOfPlayScore, getPenaltyScore,
+} from '../utils/matchScore';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAYERS   = ['Omer', 'Jiakai', 'James', 'Max', 'Michael', 'Nick', 'Stefan', 'Fabian'];
@@ -42,61 +45,6 @@ function formatDateHeader(dateStr) {
 }
 
 // ── Game logic ─────────────────────────────────────────────────────────────────
-// football-data.org v4: fullTime includes penalty goals when duration is
-// PENALTY_SHOOTOUT. Tipping uses the score after 90 min + extra time only.
-function scoreSide(obj, side) {
-  if (!obj) return null;
-  return side === 'home' ? (obj.home ?? obj.homeTeam ?? null) : (obj.away ?? obj.awayTeam ?? null);
-}
-
-function wentToPenalties(match) {
-  return match.score?.duration === 'PENALTY_SHOOTOUT'
-    || match.status === 'PENALTY_SHOOTOUT';
-}
-
-/** Score after 90 min + extra time — used for tipping, excludes shootout goals. */
-function getEndOfPlayScore(match) {
-  const score = match.score;
-  if (!score) return { home: null, away: null };
-
-  if (wentToPenalties(match)) {
-    const rt = score.regularTime;
-    const et = score.extraTime;
-    if (rt != null || et != null) {
-      return {
-        home: (scoreSide(rt, 'home') ?? 0) + (scoreSide(et, 'home') ?? 0),
-        away: (scoreSide(rt, 'away') ?? 0) + (scoreSide(et, 'away') ?? 0),
-      };
-    }
-    const pens = score.penalties;
-    const ftH = scoreSide(score.fullTime, 'home');
-    const ftA = scoreSide(score.fullTime, 'away');
-    const ph = scoreSide(pens, 'home');
-    const pa = scoreSide(pens, 'away');
-    if (ftH != null && ftA != null && ph != null && pa != null) {
-      return { home: ftH - ph, away: ftA - pa };
-    }
-  }
-
-  return {
-    home: scoreSide(score.fullTime, 'home'),
-    away: scoreSide(score.fullTime, 'away'),
-  };
-}
-
-/** Shootout goals only — derived from fullTime minus end-of-play (API penalties node can be wrong). */
-function getPenaltyScore(match) {
-  if (!wentToPenalties(match)) return null;
-  const play = getEndOfPlayScore(match);
-  const ftH = scoreSide(match.score?.fullTime, 'home');
-  const ftA = scoreSide(match.score?.fullTime, 'away');
-  if (play.home == null || play.away == null || ftH == null || ftA == null) return null;
-  const home = ftH - play.home;
-  const away = ftA - play.away;
-  if (home < 0 || away < 0) return null;
-  return { home, away };
-}
-
 function getTippingScore(match) {
   return getEndOfPlayScore(match);
 }

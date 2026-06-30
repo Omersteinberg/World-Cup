@@ -1,5 +1,9 @@
 import React from 'react';
 import { hasApiKey } from '../services/footballApi';
+import {
+  getEndOfPlayScore, getPenaltyScore, getLiveScore,
+  getFinishedStatusLabel, wentToPenalties,
+} from '../utils/matchScore';
 
 // Country name → flag emoji
 const FLAG = {
@@ -27,6 +31,23 @@ function formatKickoff(utcDate) {
 function StatusBadge({ match }) {
   const { status, minute } = match;
 
+  if (status === 'PENALTY_SHOOTOUT') {
+    return (
+      <span className="inline-flex items-center gap-1 bg-amber-600/30 text-amber-400 text-[10px] font-black px-1.5 py-0.5 rounded border border-amber-500/40">
+        <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse inline-block" />
+        PENS
+      </span>
+    );
+  }
+  if (status === 'EXTRA_TIME') {
+    const label = minute != null ? `${minute}'` : 'ET';
+    return (
+      <span className="inline-flex items-center gap-1 bg-emerald-600/30 text-emerald-400 text-[10px] font-black px-1.5 py-0.5 rounded border border-emerald-500/40">
+        <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block" />
+        {label}
+      </span>
+    );
+  }
   if (['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(status)) {
     const label = status === 'HALFTIME' ? 'HT' : `${minute ?? '?'}'`;
     return (
@@ -39,7 +60,7 @@ function StatusBadge({ match }) {
   if (status === 'FINISHED') {
     return (
       <span className="inline-block bg-slate-700 text-slate-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-slate-600">
-        FT
+        {getFinishedStatusLabel(match)}
       </span>
     );
   }
@@ -51,38 +72,66 @@ function StatusBadge({ match }) {
   );
 }
 
+function ScoreColumn({ value, isLive, isDone }) {
+  return (
+    <div className="shrink-0 w-6 text-right flex flex-col items-end gap-0.5">
+      <span className={`text-base font-black leading-none ${isLive ? 'text-emerald-400' : isDone ? 'text-slate-200' : 'text-slate-600'}`}>
+        {value ?? '-'}
+      </span>
+    </div>
+  );
+}
+
 function MatchCard({ match }) {
   const h  = match.homeTeam?.name ?? '?';
   const a  = match.awayTeam?.name ?? '?';
-  const hs = match.score?.fullTime?.home;
-  const as = match.score?.fullTime?.away;
-  const isLive = ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(match.status);
+  const isLive = ['IN_PLAY', 'PAUSED', 'HALFTIME', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'].includes(match.status);
   const isDone = match.status === 'FINISHED';
   const showScore = isLive || isDone;
 
+  const pens = (isDone || match.status === 'PENALTY_SHOOTOUT') && wentToPenalties(match)
+    ? getPenaltyScore(match)
+    : null;
+  const { home: hs, away: as } = isDone
+    ? getEndOfPlayScore(match)
+    : isLive && match.status === 'PENALTY_SHOOTOUT'
+      ? getEndOfPlayScore(match)
+      : getLiveScore(match);
+
   return (
-    <div className={`shrink-0 bg-slate-800 rounded-xl border px-4 py-3 min-w-[200px] flex flex-col items-center gap-1.5 shadow
+    <div className={`shrink-0 bg-slate-800 rounded-xl border px-4 py-3.5 min-w-[210px] min-h-[108px] flex flex-col items-center justify-center gap-1.5 shadow
       ${isLive ? 'border-emerald-600/50 shadow-emerald-950/40' : 'border-slate-700'}`}>
 
       {/* Home */}
       <div className="flex items-center gap-1.5 w-full justify-between">
         <span className="text-sm">{flag(h)}</span>
         <span className={`text-xs font-semibold truncate flex-1 ${isLive ? 'text-white' : 'text-slate-300'}`}>{h}</span>
-        <span className={`text-base font-black w-5 text-right ${isLive ? 'text-emerald-400' : isDone ? 'text-slate-200' : 'text-slate-600'}`}>
-          {showScore ? hs ?? '-' : ''}
-        </span>
+        {showScore ? (
+          <ScoreColumn value={hs} isLive={isLive} isDone={isDone} />
+        ) : (
+          <div className="w-6" />
+        )}
       </div>
 
-      {/* Status badge centred */}
-      <StatusBadge match={match} />
+      {/* Status badge + pens */}
+      <div className="flex flex-col items-center gap-0.5">
+        <StatusBadge match={match} />
+        {pens && (
+          <span className="text-[9px] font-bold text-slate-500 leading-none">
+            pens {pens.home}–{pens.away}
+          </span>
+        )}
+      </div>
 
       {/* Away */}
       <div className="flex items-center gap-1.5 w-full justify-between">
         <span className="text-sm">{flag(a)}</span>
         <span className={`text-xs font-semibold truncate flex-1 ${isLive ? 'text-white' : 'text-slate-300'}`}>{a}</span>
-        <span className={`text-base font-black w-5 text-right ${isLive ? 'text-emerald-400' : isDone ? 'text-slate-200' : 'text-slate-600'}`}>
-          {showScore ? as ?? '-' : ''}
-        </span>
+        {showScore ? (
+          <ScoreColumn value={as} isLive={isLive} isDone={isDone} />
+        ) : (
+          <div className="w-6" />
+        )}
       </div>
     </div>
   );
