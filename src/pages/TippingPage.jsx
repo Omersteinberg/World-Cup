@@ -430,7 +430,7 @@ export default function TippingPage({ matches = [] }) {
   const [predMap, setPredMap] = useState({}); // { matchId: { playerName: { homeScore, awayScore } } }
   const [tab, setTab] = useState('matches');
   const todayRef = useRef(null);
-  const hasScrolledRef = useRef(false);
+  const prevTabRef = useRef(null);
   const swipeStartRef = useRef(null);
 
   const SWIPE_MIN = 60;
@@ -512,12 +512,14 @@ export default function TippingPage({ matches = [] }) {
 
   const sortedDates = useMemo(() => Object.keys(grouped).sort(), [grouped]);
 
-  // Auto-scroll to today's matches once, the first time they're available
+  // Scroll to today's matches whenever the matches tab becomes active
   useEffect(() => {
-    if (hasScrolledRef.current || tab !== 'matches') return;
+    const cameToMatches = tab === 'matches' && prevTabRef.current !== 'matches';
+    prevTabRef.current = tab;
+
+    if (!cameToMatches) return;
     if (!sortedDates.includes(todayAEST()) || !todayRef.current) return;
     todayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    hasScrolledRef.current = true;
   }, [tab, sortedDates]);
   const finishedMatches = useMemo(() => matches.filter(m => m.status === 'FINISHED'), [matches]);
 

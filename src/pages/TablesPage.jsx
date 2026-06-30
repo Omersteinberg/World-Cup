@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -158,6 +158,33 @@ function KnockoutMatch({ match }) {
 
 export default function TablesPage({ matches = [] }) {
   const [tab, setTab] = useState('groups');
+  const swipeStartRef = useRef(null);
+
+  const SWIPE_MIN = 60;
+
+  function handleSwipeStart(e) {
+    const t = e.touches[0];
+    swipeStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function handleSwipeEnd(e) {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+
+    if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < 0 && tab === 'groups') setTab('knockout');
+    else if (dx > 0 && tab === 'knockout') setTab('groups');
+  }
+
+  function handleSwipeCancel() {
+    swipeStartRef.current = null;
+  }
 
   const standings = useMemo(() => buildGroupStandings(matches), [matches]);
   const knockout  = useMemo(() => buildKnockoutRounds(matches),  [matches]);
@@ -198,68 +225,74 @@ export default function TablesPage({ matches = [] }) {
         ))}
       </div>
 
-      {/* ── Group tables ── */}
-      {tab === 'groups' && (
-        <>
-          {!hasGroups ? (
-            <div className="text-center py-16 text-slate-500 text-sm italic">
-              <p className="text-3xl mb-3">🏗️</p>
-              <p>Group tables will populate once the tournament kicks off on 12 June.</p>
-              <p className="text-xs mt-2 text-slate-600">
-                {matches.length === 0
-                  ? 'No match data loaded yet — check your API key.'
-                  : `${matches.length} matches loaded, none finished yet.`}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60 inline-block" />
-                Top 2 + 8 best third-place teams advance to Round of 32
+      {/* Tab content — swipe left/right to switch tabs */}
+      <div
+        className="touch-pan-y"
+        onTouchStart={handleSwipeStart}
+        onTouchEnd={handleSwipeEnd}
+        onTouchCancel={handleSwipeCancel}
+      >
+        {tab === 'groups' && (
+          <>
+            {!hasGroups ? (
+              <div className="text-center py-16 text-slate-500 text-sm italic">
+                <p className="text-3xl mb-3">🏗️</p>
+                <p>Group tables will populate once the tournament kicks off on 12 June.</p>
+                <p className="text-xs mt-2 text-slate-600">
+                  {matches.length === 0
+                    ? 'No match data loaded yet — check your API key.'
+                    : `${matches.length} matches loaded, none finished yet.`}
+                </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {groupKeys.map(g => (
-                  <GroupTable key={g} groupKey={g} rows={standings[g]} />
-                ))}
-              </div>
-            </>
-          )}
-        </>
-      )}
+            ) : (
+              <>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/60 inline-block" />
+                  Top 2 + 8 best third-place teams advance to Round of 32
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {groupKeys.map(g => (
+                    <GroupTable key={g} groupKey={g} rows={standings[g]} />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
 
-      {/* ── Knockout bracket ── */}
-      {tab === 'knockout' && (
-        <>
-          {!knockoutLive ? (
-            <div className="text-center py-16 text-slate-500 text-sm italic">
-              <p className="text-3xl mb-3">⚔️</p>
-              <p>The knockout bracket unlocks after the group stage ends.</p>
-              <p className="text-xs mt-2 text-slate-600">Check back from 1 July 2026.</p>
-            </div>
-          ) : Object.keys(knockout).length === 0 ? (
-            <div className="text-center py-16 text-slate-500 text-sm italic">
-              <p>No knockout matches available yet.</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-8">
-              {Object.entries(KNOCKOUT_STAGE_LABELS).map(([stage, label]) => {
-                const ms = knockout[stage];
-                if (!ms?.length) return null;
-                return (
-                  <div key={stage}>
-                    <h2 className="text-sm font-black uppercase tracking-widest text-amber-400 mb-3">
-                      {label}
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                      {ms.map(m => <KnockoutMatch key={m.id} match={m} />)}
+        {tab === 'knockout' && (
+          <>
+            {!knockoutLive ? (
+              <div className="text-center py-16 text-slate-500 text-sm italic">
+                <p className="text-3xl mb-3">⚔️</p>
+                <p>The knockout bracket unlocks after the group stage ends.</p>
+                <p className="text-xs mt-2 text-slate-600">Check back from 1 July 2026.</p>
+              </div>
+            ) : Object.keys(knockout).length === 0 ? (
+              <div className="text-center py-16 text-slate-500 text-sm italic">
+                <p>No knockout matches available yet.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-8">
+                {Object.entries(KNOCKOUT_STAGE_LABELS).map(([stage, label]) => {
+                  const ms = knockout[stage];
+                  if (!ms?.length) return null;
+                  return (
+                    <div key={stage}>
+                      <h2 className="text-sm font-black uppercase tracking-widest text-amber-400 mb-3">
+                        {label}
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {ms.map(m => <KnockoutMatch key={m.id} match={m} />)}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </>
-      )}
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -123,7 +123,7 @@ export default function WatchAlongChat() {
   const [loading,  setLoading]  = useState(true);
   const [name,     setName]     = useState(() => localStorage.getItem('daxhub_name') ?? '');
   const [text,     setText]     = useState('');
-  const bottomRef               = useRef(null);
+  const listRef                 = useRef(null);
   const nameInputRef            = useRef(null);
 
   // Persist name
@@ -145,9 +145,11 @@ export default function WatchAlongChat() {
     return unsub;
   }, []);
 
-  // Scroll to bottom on new messages
+  // Scroll chat list to bottom on new messages (container only — not the page)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
   async function send() {
@@ -208,7 +210,7 @@ export default function WatchAlongChat() {
       </div>
 
       {/* Message list */}
-      <div className="h-72 overflow-y-auto p-3 space-y-0.5 bg-slate-900/40">
+      <div ref={listRef} className="h-72 overflow-y-auto p-3 space-y-0.5 bg-slate-900/40">
         {loading && (
           <p className="text-slate-600 text-xs text-center pt-4 animate-pulse">
             Loading chat…
@@ -227,7 +229,6 @@ export default function WatchAlongChat() {
             onReact={toggleReaction}
           />
         ))}
-        <div ref={bottomRef} />
       </div>
 
       {/* Input area */}
