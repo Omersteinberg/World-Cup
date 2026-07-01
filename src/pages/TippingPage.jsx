@@ -7,34 +7,7 @@ import { useSwipeTabs } from '../hooks/useSwipeTabs';
 import {
   getEndOfPlayScore, getPenaltyScore,
 } from '../utils/matchScore';
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-const PLAYERS   = ['Omer', 'Jiakai', 'James', 'Max', 'Michael', 'Nick', 'Stefan', 'Fabian'];
-const TIPS_COL  = 'worldcup_tips';
-const PREDS_COL = 'worldcup_predictions';
-const NAME_KEY  = 'syndicate_name';
-
-const configured = !!(
-  import.meta.env.VITE_FIREBASE_API_KEY &&
-  import.meta.env.VITE_FIREBASE_PROJECT_ID
-);
-
-// ── AEST helpers ──────────────────────────────────────────────────────────────
-const TZ = 'Australia/Melbourne';
-
-function todayAEST() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD
-}
-
-function matchDateAEST(utcDate) {
-  return new Date(utcDate).toLocaleDateString('en-CA', { timeZone: TZ });
-}
-
-function formatTimeAEST(utcDate) {
-  return new Date(utcDate).toLocaleTimeString('en-AU', {
-    timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: true,
-  });
-}
+import { todayLocal, matchLocalDate, formatKickoffLocal } from '../utils/matchDates';
 
 function formatDateHeader(dateStr) {
   // dateStr is YYYY-MM-DD — parse as local date to avoid timezone shift in header
@@ -82,13 +55,13 @@ function calcPoints(finishedMatches, tipMap, predMap) {
   const total = {};
   const todayPts = {};
   PLAYERS.forEach(p => { total[p] = MANUAL_ADJUSTMENTS[p] ?? 0; todayPts[p] = 0; });
-  const today = todayAEST();
+  const today = todayLocal();
 
   for (const m of finishedMatches) {
     const result = getActualResult(m);
     if (!result) continue;
     const { home: hs, away: as } = getTippingScore(m);
-    const isToday = matchDateAEST(m.utcDate) === today;
+    const isToday = matchLocalDate(m.utcDate) === today;
 
     for (const player of PLAYERS) {
       const tip  = tipMap[m.id]?.[player];
@@ -163,7 +136,7 @@ function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
       <div className={`p-4 ${isLive ? 'bg-emerald-950/30' : ''}`}>
         <div className="flex items-center justify-between text-[10px] text-slate-500 mb-2 uppercase tracking-wider">
           <span>{groupLabel(match.group)}</span>
-          <span>{formatTimeAEST(match.utcDate)} AEST</span>
+          <span>{formatKickoffLocal(match.utcDate)} AEST</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -437,7 +410,7 @@ export default function TippingPage({ matches = [] }) {
   const grouped = useMemo(() => {
     const g = {};
     for (const m of matches) {
-      const date = matchDateAEST(m.utcDate);
+      const date = matchLocalDate(m.utcDate);
       if (!g[date]) g[date] = [];
       g[date].push(m);
     }
@@ -453,7 +426,7 @@ export default function TippingPage({ matches = [] }) {
     prevTabRef.current = tab;
 
     if (!cameToMatches) return;
-    if (!sortedDates.includes(todayAEST()) || !todayRef.current) return;
+    if (!sortedDates.includes(todayLocal()) || !todayRef.current) return;
     todayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [tab, sortedDates]);
   const finishedMatches = useMemo(() => matches.filter(m => m.status === 'FINISHED'), [matches]);
@@ -540,12 +513,12 @@ export default function TippingPage({ matches = [] }) {
                 {sortedDates.map(date => (
                   <div
                     key={date}
-                    ref={date === todayAEST() ? todayRef : null}
+                    ref={date === todayLocal() ? todayRef : null}
                     className="flex flex-col gap-3"
                   >
                     <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 px-1">
                       {formatDateHeader(date)}
-                      {date === todayAEST() && (
+                      {date === todayLocal() && (
                         <span className="ml-2 text-emerald-400 text-[10px] bg-emerald-900/40
                           border border-emerald-700/50 px-2 py-0.5 rounded-full normal-case tracking-normal">
                           Today

@@ -3,9 +3,23 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchWCMatches } from '../services/footballApi';
+import { todayLocal, matchLocalDate } from '../utils/matchDates';
 
-const POLL_MS   = 60_000; // 1 minute — safe for football-data.org free tier
-const TODAY_STR = () => new Date().toISOString().split('T')[0];
+const POLL_MS = 60_000;
+
+const LIVE_STATUSES = ['IN_PLAY', 'PAUSED', 'HALFTIME', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'];
+
+const DISPLAY_ORDER = {
+  IN_PLAY: 0, PAUSED: 1, HALFTIME: 2, EXTRA_TIME: 3, PENALTY_SHOOTOUT: 4,
+  FINISHED: 5, TIMED: 6, SCHEDULED: 7,
+};
+
+function sortTodayMatches(a, b) {
+  const oa = DISPLAY_ORDER[a.status] ?? 8;
+  const ob = DISPLAY_ORDER[b.status] ?? 8;
+  if (oa !== ob) return oa - ob;
+  return new Date(a.utcDate) - new Date(b.utcDate);
+}
 
 // Win = 3 pts, draw = 1 pt each, loss = 0.
 // Goal difference is tracked as a tiebreaker (GD = goals scored − goals conceded).
@@ -79,13 +93,15 @@ export function useLiveScores() {
 
   // Derived slices — memoised to avoid downstream re-renders
   const liveMatches = useMemo(
-    () => matches.filter(m => ['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(m.status)),
+    () => matches.filter(m => LIVE_STATUSES.includes(m.status)),
     [matches],
   );
 
   const todayMatches = useMemo(() => {
-    const today = TODAY_STR();
-    return matches.filter(m => m.utcDate?.startsWith(today));
+    const today = todayLocal();
+    return matches
+      .filter(m => matchLocalDate(m.utcDate) === today)
+      .sort(sortTodayMatches);
   }, [matches]);
 
   const recentMatches = useMemo(() => {

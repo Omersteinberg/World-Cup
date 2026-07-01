@@ -4,6 +4,8 @@ import {
   getEndOfPlayScore, getPenaltyScore, getLiveScore,
   getFinishedStatusLabel, wentToPenalties,
 } from '../utils/matchScore';
+import { formatKickoffLocal } from '../utils/matchDates';
+import { getMatchMinute, formatLiveMinute } from '../utils/matchMinute';
 
 // Country name → flag emoji
 const FLAG = {
@@ -23,37 +25,16 @@ const FLAG = {
 
 function flag(name) { return FLAG[name] ?? '🏴'; }
 
-function formatKickoff(utcDate) {
-  if (!utcDate) return '--:--';
-  return new Date(utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
+const LIVE_STATUSES = ['IN_PLAY', 'PAUSED', 'HALFTIME', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'];
 
 function StatusBadge({ match }) {
-  const { status, minute } = match;
+  const { status } = match;
 
-  if (status === 'PENALTY_SHOOTOUT') {
-    return (
-      <span className="inline-flex items-center gap-1 bg-amber-600/30 text-amber-400 text-[10px] font-black px-1.5 py-0.5 rounded border border-amber-500/40">
-        <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse inline-block" />
-        PENS
-      </span>
-    );
-  }
-  if (status === 'EXTRA_TIME') {
-    const label = minute != null ? `${minute}'` : 'ET';
+  if (LIVE_STATUSES.includes(status)) {
     return (
       <span className="inline-flex items-center gap-1 bg-emerald-600/30 text-emerald-400 text-[10px] font-black px-1.5 py-0.5 rounded border border-emerald-500/40">
         <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block" />
-        {label}
-      </span>
-    );
-  }
-  if (['IN_PLAY', 'PAUSED', 'HALFTIME'].includes(status)) {
-    const label = status === 'HALFTIME' ? 'HT' : `${minute ?? '?'}'`;
-    return (
-      <span className="inline-flex items-center gap-1 bg-emerald-600/30 text-emerald-400 text-[10px] font-black px-1.5 py-0.5 rounded border border-emerald-500/40">
-        <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block" />
-        {label}
+        {formatLiveMinute(match)}
       </span>
     );
   }
@@ -64,17 +45,19 @@ function StatusBadge({ match }) {
       </span>
     );
   }
-  // SCHEDULED / TIMED
   return (
     <span className="inline-block text-slate-500 text-[10px] font-medium px-0.5">
-      {formatKickoff(match.utcDate)}
+      {formatKickoffLocal(match.utcDate)}
     </span>
   );
 }
 
-function ScoreColumn({ value, isLive, isDone }) {
+function ScoreColumn({ value, isLive, isDone, minuteLabel }) {
   return (
-    <div className="shrink-0 w-6 text-right flex flex-col items-end gap-0.5">
+    <div className="shrink-0 min-w-[2.75rem] text-right flex flex-col items-end justify-center gap-0.5">
+      {minuteLabel && (
+        <span className="text-[10px] font-black text-emerald-400 leading-none">{minuteLabel}</span>
+      )}
       <span className={`text-base font-black leading-none ${isLive ? 'text-emerald-400' : isDone ? 'text-slate-200' : 'text-slate-600'}`}>
         {value ?? '-'}
       </span>
@@ -85,9 +68,11 @@ function ScoreColumn({ value, isLive, isDone }) {
 function MatchCard({ match }) {
   const h  = match.homeTeam?.name ?? '?';
   const a  = match.awayTeam?.name ?? '?';
-  const isLive = ['IN_PLAY', 'PAUSED', 'HALFTIME', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'].includes(match.status);
+  const isLive = LIVE_STATUSES.includes(match.status);
   const isDone = match.status === 'FINISHED';
   const showScore = isLive || isDone;
+  const minute = getMatchMinute(match);
+  const minuteLabel = isLive && minute != null ? `${minute}'` : null;
 
   const pens = (isDone || match.status === 'PENALTY_SHOOTOUT') && wentToPenalties(match)
     ? getPenaltyScore(match)
@@ -99,7 +84,7 @@ function MatchCard({ match }) {
       : getLiveScore(match);
 
   return (
-    <div className={`shrink-0 bg-slate-800 rounded-xl border px-4 py-3.5 min-w-[210px] min-h-[108px] flex flex-col items-center justify-center gap-1.5 shadow
+    <div className={`shrink-0 bg-slate-800 rounded-xl border px-4 py-3.5 min-w-[220px] min-h-[108px] flex flex-col items-center justify-center gap-1.5 shadow
       ${isLive ? 'border-emerald-600/50 shadow-emerald-950/40' : 'border-slate-700'}`}>
 
       {/* Home */}
@@ -107,9 +92,9 @@ function MatchCard({ match }) {
         <span className="text-sm">{flag(h)}</span>
         <span className={`text-xs font-semibold truncate flex-1 ${isLive ? 'text-white' : 'text-slate-300'}`}>{h}</span>
         {showScore ? (
-          <ScoreColumn value={hs} isLive={isLive} isDone={isDone} />
+          <ScoreColumn value={hs} isLive={isLive} isDone={isDone} minuteLabel={minuteLabel} />
         ) : (
-          <div className="w-6" />
+          <div className="w-11" />
         )}
       </div>
 
@@ -130,7 +115,7 @@ function MatchCard({ match }) {
         {showScore ? (
           <ScoreColumn value={as} isLive={isLive} isDone={isDone} />
         ) : (
-          <div className="w-6" />
+          <div className="w-11" />
         )}
       </div>
     </div>
@@ -175,7 +160,9 @@ export default function LiveScores({ liveMatches, todayMatches, loading, error, 
         </div>
         {lastUpdated && (
           <span className="text-[10px] text-slate-600">
-            Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            Updated {lastUpdated.toLocaleTimeString('en-AU', {
+              timeZone: 'Australia/Melbourne', hour: '2-digit', minute: '2-digit', hour12: true,
+            })}
           </span>
         )}
       </div>
