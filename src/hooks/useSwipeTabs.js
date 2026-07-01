@@ -2,6 +2,11 @@ import { useEffect, useRef } from 'react';
 
 const SWIPE_MIN = 60;
 
+function isInteractiveTarget(target) {
+  return target instanceof Element
+    && target.closest('input, select, textarea, button, a, [contenteditable="true"]') != null;
+}
+
 /** Swipe left → rightTab, swipe right → leftTab. Uses non-passive touchmove so the browser doesn't steal horizontal gestures. */
 export function useSwipeTabs(tab, setTab, leftTab, rightTab) {
   const containerRef = useRef(null);
@@ -15,12 +20,17 @@ export function useSwipeTabs(tab, setTab, leftTab, rightTab) {
     if (!el) return;
 
     function onStart(e) {
+      if (isInteractiveTarget(e.target)) return;
       const t = e.touches[0];
       if (!t) return;
       swipeRef.current = { x: t.clientX, y: t.clientY, horizontal: false };
     }
 
     function onMove(e) {
+      if (e.touches.length > 1) {
+        swipeRef.current = null;
+        return;
+      }
       const start = swipeRef.current;
       if (!start) return;
       const t = e.touches[0];

@@ -223,16 +223,18 @@ function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
             <span className="text-xs text-slate-500 shrink-0">Score:</span>
             <input
               type="number" min="0" max="20" value={pendH}
+              inputMode="numeric"
               onChange={e => setPendH(e.target.value)}
               className="w-12 bg-slate-900 border border-slate-600 rounded-lg py-1.5 text-center
-                text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                text-base text-slate-200 focus:outline-none focus:border-emerald-500"
             />
             <span className="text-slate-600">–</span>
             <input
               type="number" min="0" max="20" value={pendA}
+              inputMode="numeric"
               onChange={e => setPendA(e.target.value)}
               className="w-12 bg-slate-900 border border-slate-600 rounded-lg py-1.5 text-center
-                text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                text-base text-slate-200 focus:outline-none focus:border-emerald-500"
             />
             <button
               onClick={handlePredSubmit}
@@ -494,7 +496,7 @@ export default function TippingPage({ matches = [] }) {
         <select
           value={playerName}
           onChange={e => setPlayerName(e.target.value)}
-          className="flex-1 bg-transparent text-sm font-bold text-emerald-400 focus:outline-none cursor-pointer"
+          className="flex-1 bg-transparent text-base font-bold text-emerald-400 focus:outline-none cursor-pointer"
         >
           <option value="" className="bg-slate-800 text-slate-400">Select your name…</option>
           {PLAYERS.map(p => <option key={p} value={p} className="bg-slate-800 text-slate-200">{p}</option>)}
