@@ -9,6 +9,17 @@ import {
 } from '../utils/matchScore';
 import { todayLocal, matchLocalDate, formatKickoffLocal } from '../utils/matchDates';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+const PLAYERS   = ['Omer', 'Jiakai', 'James', 'Max', 'Michael', 'Nick', 'Stefan', 'Fabian'];
+const TIPS_COL  = 'worldcup_tips';
+const PREDS_COL = 'worldcup_predictions';
+const NAME_KEY  = 'syndicate_name';
+
+const configured = !!(
+  import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID
+);
+
 function formatDateHeader(dateStr) {
   // dateStr is YYYY-MM-DD — parse as local date to avoid timezone shift in header
   const [y, m, d] = dateStr.split('-').map(Number);
