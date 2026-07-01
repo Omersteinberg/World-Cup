@@ -5,9 +5,10 @@ import {
 import { db } from '../services/firebase';
 import { useSwipeTabs } from '../hooks/useSwipeTabs';
 import {
-  getEndOfPlayScore, getPenaltyScore,
+  getEndOfPlayScore, getPenaltyScore, getLiveScore, wentToPenalties,
 } from '../utils/matchScore';
 import { todayLocal, matchLocalDate, formatKickoffLocal } from '../utils/matchDates';
+import { formatLiveMinute } from '../utils/matchMinute';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLAYERS   = ['Omer', 'Jiakai', 'James', 'Max', 'Michael', 'Nick', 'Stefan', 'Fabian'];
@@ -119,8 +120,16 @@ function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
   const result   = getActualResult(match);
   const isLive   = ['IN_PLAY', 'PAUSED', 'HALFTIME', 'EXTRA_TIME', 'PENALTY_SHOOTOUT'].includes(match.status);
   const isDone   = match.status === 'FINISHED';
-  const { home: hs, away: as } = getTippingScore(match);
-  const pens     = isDone ? getPenaltyScore(match) : null;
+  const pens     = (isDone || match.status === 'PENALTY_SHOOTOUT') && wentToPenalties(match)
+    ? getPenaltyScore(match)
+    : null;
+  const { home: hs, away: as } = isDone
+    ? getTippingScore(match)
+    : isLive && match.status === 'PENALTY_SHOOTOUT'
+      ? getEndOfPlayScore(match)
+      : isLive
+        ? getLiveScore(match)
+        : { home: null, away: null };
 
   const myTip  = playerName ? tipMap[match.id]?.[playerName]  : null;
   const myPred = playerName ? predMap[match.id]?.[playerName] : null;
@@ -163,10 +172,14 @@ function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
                 )}
               </div>
             ) : isLive ? (
-              <span className="text-emerald-400 font-black text-sm flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
-                {match.status === 'PENALTY_SHOOTOUT' ? 'PENS' : 'LIVE'}
-              </span>
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-emerald-400 font-black text-lg">{hs ?? '-'} – {as ?? '-'}</span>
+                {pens && (
+                  <span className="text-[10px] font-bold text-slate-400">
+                    pens {pens.home}–{pens.away}
+                  </span>
+                )}
+              </div>
             ) : (
               <span className="text-slate-600 text-xs">vs</span>
             )}
@@ -177,6 +190,12 @@ function MatchCard({ match, tipMap, predMap, playerName, onTip, onPred }) {
         {isDone && (
           <p className="text-center text-[10px] text-slate-600 uppercase tracking-wider mt-1">
             {pens ? 'After Extra Time' : 'Full Time'}
+          </p>
+        )}
+        {isLive && (
+          <p className="text-center text-[10px] text-emerald-500/80 uppercase tracking-wider mt-1 flex items-center justify-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+            {formatLiveMinute(match)}
           </p>
         )}
         {locked && !isDone && !isLive && (
